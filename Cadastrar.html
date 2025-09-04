@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastro de Vídeo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background: #f4f4f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #444;
+    }
+    form {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+    }
+    input[type="checkbox"] {
+      margin-right: 5px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    #novoAutorBtn {
+      background: #2196F3;
+    }
+    #novoAutorBtn:hover {
+      background: #1976D2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cadastro de Vídeo</h1>
+  <form id="formVideo">
+    <label for="titulo">Título:</label>
+    <input type="text" id="titulo" name="titulo" required>
+
+    <label for="videoId">ID do vídeo do YouTube:</label>
+    <input type="text" id="videoId" name="videoId" required>
+
+    <label for="descricao">Descrição:</label>
+    <textarea id="descricao" name="descricao" rows="3"></textarea>
+
+    <label for="tags">Tags (separadas por ponto, ex: Verbo.Have.SimplePresente):</label>
+    <input type="text" id="tags" name="tags">
+
+    <label for="autor">Autor:</label>
+    <select id="autor" name="autor"></select>
+    <button type="button" id="novoAutorBtn">Cadastrar novo autor</button>
+
+    <label>
+      <input type="checkbox" id="especial" name="especial">
+      Vídeo Especial (do dia)
+    </label>
+
+    <button type="submit">Cadastrar Vídeo</button>
+  </form>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
+  <script>
+    // 🔹 Configuração Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyA9r7AfToG9msI_guh8xY_PJBJXfrF_IPc",
+      authDomain: "instagraneducativo.firebaseapp.com",
+      projectId: "instagraneducativo",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const form = document.getElementById("formVideo");
+    const tagsInput = document.getElementById("tags");
+    const autorSelect = document.getElementById("autor");
+    const novoAutorBtn = document.getElementById("novoAutorBtn");
+
+    // 🔹 Autenticação anônima
+    async function ensureAuth() {
+      if (!auth.currentUser) {
+        await auth.signInAnonymously();
+        console.log("Autenticação anônima concluída.");
+      }
+    }
+
+    // 🔹 Carregar autores no select
+    async function carregarAutores() {
+      await ensureAuth();
+      autorSelect.innerHTML = "";
+      const snapshot = await db.collection("autores").get();
+      snapshot.forEach(doc => {
+        const option = document.createElement("option");
+        option.value = doc.id;
+        option.textContent = doc.data().nome;
+        autorSelect.appendChild(option);
+      });
+    }
+
+    // 🔹 Adicionar novo autor
+    novoAutorBtn.addEventListener("click", async () => {
+      const nome = prompt("Digite o nome do novo autor:");
+      if (nome) {
+        const docRef = await db.collection("autores").add({ nome });
+        await carregarAutores();
+        autorSelect.value = docRef.id;
+      }
+    });
+
+    // 🔹 Salvar vídeo
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      await ensureAuth();
+
+      const titulo = form.titulo.value;
+      const videoId = form.videoId.value;
+      const descricao = form.descricao.value;
+      const tags = form.tags.value.split(".").map(t => t.trim()).filter(t => t !== "");
+      const autor = form.autor.value;
+      const especial = form.especial.checked;
+
+      try {
+        // Salvar vídeo
+        await db.collection("videos").add({
+          titulo,
+          videoId,
+          descricao,
+          tags,
+          autor,
+          especial,
+          data: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Garantir que as tags existam na coleção de tags
+        for (let t of tags) {
+          const query = await db.collection("tags").where("nome", "==", t).get();
+          if (query.empty) {
+            await db.collection("tags").add({ nome: t });
+          }
+        }
+
+        alert("Vídeo cadastrado com sucesso!");
+        form.reset();
+      } catch (err) {
+        console.error("Erro ao cadastrar vídeo:", err);
+        alert("Erro ao cadastrar vídeo. Veja o console.");
+      }
+    });
+
+    // 🔹 Inicializar
+    (async function init() {
+      await carregarAutores();
+    })();
+  </script>
+</body>
+</html>

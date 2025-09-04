@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shorts Style - Pronúncia</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Tailwind CSS via CDN (versão otimizada) -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+</head>
+<body class="bg-black text-white flex flex-col min-h-screen">
+  <!-- Cabeçalho com título e badge de Pronúncia -->
+  <div class="p-4 bg-black text-center text-xl font-bold flex justify-center items-center" id="tituloVideo">
+    <div class="loader hidden" id="loader"></div>
+    <span id="tituloText">Carregando vídeos de Pronúncia...</span>
+    <span class="badge-pronuncia">Pronúncia</span>
+  </div>
+
+  <!-- Layout principal -->
+  <div class="desktop-layout flex-1 px-4 py-2">
+    <!-- Vídeo à esquerda (50% da tela) -->
+    <div class="video-wrapper">
+      <div class="video-container">
+        <iframe 
+          id="videoFrame"
+          src="about:blank" 
+          frameborder="0" 
+          allowfullscreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- Descrição e comentários à direita (50% da tela) -->
+    <div class="descricao-wrapper bg-zinc-900 p-4 rounded-xl">
+      <h2 class="text-lg font-bold mb-2">Descrição <span class="badge-pronuncia">Pronúncia</span></h2>
+      <p id="descricao" class="text-sm mb-4">Carregando descrição...</p>
+
+      <!-- Sistema de Agendamento de Revisão -->
+      <div class="agendamento-wrapper bg-purple-900 p-3 rounded-lg mb-4">
+        <h3 class="font-bold mb-2">Agendar Revisão</h3>
+        <div class="flex items-center gap-2">
+          <select id="intervalo-revisao" class="flex-1 bg-gray-700 text-white rounded px-3 py-2">
+            <option value="1">1 dia</option>
+            <option value="3" selected>3 dias</option>
+            <option value="5">5 dias</option>
+            <option value="7">7 dias</option>
+          </select>
+          <button id="btn-agendar" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded font-bold">
+            Agendar
+          </button>
+        </div>
+      </div>
+
+      <!-- Comentários -->
+      <div id="comentarios" class="comentarios-wrapper space-y-2 mb-4">
+        <p class='text-gray-400 text-center'>Carregando comentários...</p>
+      </div>
+
+      <!-- Caixa de texto + botão -->
+      <div class="input-wrapper mb-2">
+        <input id="inputComentario" type="text" placeholder="Escreva um comentário..." class="flex-1 px-3 py-2 rounded-xl text-black">
+        <button id="btnComentario" class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-xl font-bold">➕</button>
+      </div>
+
+      <!-- Botão próximo vídeo -->
+      <div class="proximo-btn-wrapper">
+        <button id="btnProximo" class="bg-blue-600 hover:bg-blue-700 w-full py-3 rounded-xl font-bold">Próximo Vídeo ▶️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carrossel de Histórico -->
+  <div class="carrossel-container hidden" id="carrosselContainer">
+    <h3 class="carrossel-title">Outros Vídeos de Pronúncia <span class="badge-pronuncia">Pronúncia</span></h3>
+    <div class="carrossel" id="carrosselHistorico">
+      <!-- Itens do carrossel serão inseridos aqui via JavaScript -->
+    </div>
+  </div>
+
+  <!-- Elemento para feedback global -->
+  <div id="feedback-global" class="fixed top-4 right-4 z-50"></div>
+
+  <!-- Loading overlay para operações de rede -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-85 flex items-center justify-center z-50 hidden">
+    <div class="text-center">
+      <div class="loader-large"></div>
+      <span class="block mt-4 text-white text-lg">Processando...</span>
+      <button id="force-close-loading" class="mt-6 text-sm bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg hidden">
+        Fechar Loading
+      </button>
+    </div>
+  </div>
+
+
+
+  <!-- Botão fixo na parte inferior -->
+  <div class="fixed bottom-4 right-4 z-40">
+    <a href="verbo.html" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-4 rounded-full shadow-lg transition-all duration-300 flex items-center">
+      <span>Verbos</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+      </svg>
+    </a>
+  </div>
+
+
+  <script src="pronuncia.js"></script>
+</body>
+</html>
