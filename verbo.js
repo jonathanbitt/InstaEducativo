@@ -15,7 +15,7 @@ let videos = [];
 let indiceAtual = 0;
 let videoEspecialAtual = null;
 let videosCarrossel = [];
-const TAG_ESPECIAL = "Verbo"; // Tag fixa para filtrar os vídeos
+const TAG_ESPECIAL = "Verbo"; // Tag alterada para "Verbos" em vez de "Pronuncia"
 
 // 🔹 Autenticação anônima
 async function ensureAuth() {
@@ -72,7 +72,7 @@ function mostrarFeedback(mensagem, tipo = 'sucesso') {
   
   const feedbackItem = document.createElement('div');
   feedbackItem.id = feedbackId;
-  feedbackItem.className = `feedback-item ${cores[tipo]} mb-2`;
+  feedbackItem.className = `feedback-item ${cores[tipo]} mb-2 p-3 rounded-lg border-l-4 transition-all duration-300 transform translate-x-full opacity-0`;
   feedbackItem.innerHTML = `
     <div class="flex items-center">
       <span class="mr-2 text-lg">${icones[tipo]}</span>
@@ -83,19 +83,139 @@ function mostrarFeedback(mensagem, tipo = 'sucesso') {
   feedbackEl.appendChild(feedbackItem);
   
   setTimeout(() => {
-    feedbackItem.style.transform = 'translateX(0)';
-    feedbackItem.style.opacity = '1';
+    feedbackItem.classList.remove('translate-x-full');
+    feedbackItem.classList.remove('opacity-0');
+    feedbackItem.classList.add('translate-x-0');
+    feedbackItem.classList.add('opacity-100');
   }, 10);
   
   setTimeout(() => {
-    feedbackItem.style.transform = 'translateX(100%)';
-    feedbackItem.style.opacity = '0';
+    feedbackItem.classList.remove('translate-x-0');
+    feedbackItem.classList.remove('opacity-100');
+    feedbackItem.classList.add('translate-x-full');
+    feedbackItem.classList.add('opacity-0');
     setTimeout(() => {
       if (feedbackEl.contains(feedbackItem)) {
         feedbackEl.removeChild(feedbackItem);
       }
     }, 300);
   }, 4000);
+}
+
+// 🔹 Função para salvar comentários no Firebase
+async function salvarComentario(comentarioTexto, videoId, usuario = 'Anônimo') {
+  try {
+    // Mostrar loading
+    mostrarLoading(true, "Salvando comentário...");
+    
+    // Adicionar documento à coleção 'comentarios'
+    await db.collection('comentarios').add({
+      texto: comentarioTexto,
+      videoId: videoId,
+      usuario: usuario,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      data: new Date().toLocaleString('pt-BR'),
+      tipo: 'verbo' // Adicionando tipo para diferenciar comentários de verbos
+    });
+    
+    // Feedback de sucesso
+    mostrarFeedback('Comentário salvo com sucesso!', 'sucesso');
+    
+    // Limpar campo de input
+    document.getElementById('inputComentario').value = '';
+    
+    // Recarregar comentários
+    await carregarComentarios(videoId);
+  } catch (error) {
+    console.error('Erro ao salvar comentário:', error);
+    mostrarFeedback('Erro ao salvar comentário: ' + error.message, 'erro');
+  } finally {
+    // Ocultar loading
+    mostrarLoading(false);
+  }
+}
+
+// 🔹 Função para carregar comentários do Firebase
+async function carregarComentarios(videoId) {
+  try {
+    const comentariosContainer = document.getElementById('comentarios');
+    comentariosContainer.innerHTML = '<p class="text-gray-400 text-center">Carregando comentários...</p>';
+    
+    // Buscar comentários para o vídeo atual
+    const snapshot = await db.collection('comentarios')
+      .where('videoId', '==', videoId)
+      .orderBy('timestamp', 'desc')
+      .get();
+    
+    comentariosContainer.innerHTML = '';
+    
+    if (snapshot.empty) {
+      comentariosContainer.innerHTML = '<p class="text-gray-400 text-center">Nenhum comentário ainda. Seja o primeiro a comentar!</p>';
+      return;
+    }
+    
+    snapshot.forEach(doc => {
+      const comentario = doc.data();
+      const comentarioElement = criarElementoComentario(comentario);
+      comentariosContainer.appendChild(comentarioElement);
+    });
+  } catch (error) {
+    console.error('Erro ao carregar comentários:', error);
+    const comentariosContainer = document.getElementById('comentarios');
+    comentariosContainer.innerHTML = '<p class="text-red-400 text-center">Erro ao carregar comentários.</p>';
+  }
+}
+
+// 🔹 Função para criar elemento de comentário
+function criarElementoComentario(comentario) {
+  const div = document.createElement('div');
+  div.className = 'comentario bg-zinc-800 p-3 rounded-xl mb-2';
+  div.innerHTML = `
+    <p class="text-sm text-white">${comentario.texto}</p>
+    <div class="flex justify-between items-center mt-2">
+      <span class="text-xs text-gray-400">Por: ${comentario.usuario}</span>
+      <span class="text-xs text-gray-500">${comentario.data}</span>
+    </div>
+  `;
+  return div;
+}
+
+// 🔹 Função para adicionar comentário (usando Firebase)
+async function adicionarComentario() {
+  if (videos.length === 0) return;
+  
+  const input = document.getElementById('inputComentario');
+  const comentarioTexto = input.value.trim();
+  
+  if (comentarioTexto !== "") {
+    try {
+      // Obter o ID do vídeo atual
+      const videoId = videos[indiceAtual].id;
+      
+      // Salvar o comentário no Firebase
+      await salvarComentario(comentarioTexto, videoId);
+      
+    } catch (error) {
+      console.error("Erro ao adicionar comentário:", error);
+      mostrarFeedback("Erro ao salvar comentário. Tente novamente.", "erro");
+    }
+  } else {
+    mostrarFeedback("Digite um comentário antes de enviar.", "aviso");
+  }
+}
+
+// 🔹 Função para renderizar comentários
+function renderizarComentarios(){
+  const comentariosDiv = document.getElementById('comentarios');
+  comentariosDiv.innerHTML = "";
+  
+  if (videos.length === 0) {
+    comentariosDiv.innerHTML = "<p class='text-gray-400 text-center'>Nenhum vídeo carregado</p>";
+    return;
+  }
+  
+  // Carregar comentários do Firebase para o vídeo atual
+  carregarComentarios(videos[indiceAtual].id);
 }
 
 // 🔹 Sistema de Agendamento de Revisão
@@ -135,7 +255,7 @@ async function agendarRevisao(video, intervaloDias) {
       dataAgendamento: firebase.firestore.Timestamp.fromDate(hoje),
       dataRevisao: firebase.firestore.Timestamp.fromDate(dataRevisao),
       intervaloDias: intervaloDias,
-      tipo: 'verbo',
+      tipo: 'verbo', // Alterado para 'verbo' em vez de 'pronuncia'
       realizada: false
     };
     
@@ -157,7 +277,7 @@ async function agendarRevisao(video, intervaloDias) {
       document.getElementById("descricao").textContent = "Parabéns! Você agendou revisão para todos os vídeos disponíveis.";
       document.getElementById("videoFrame").src = "about:blank";
       document.getElementById("carrosselContainer").classList.add("hidden");
-      document.querySelector(".agendamento-wrapper").classList.add("hidden");
+      document.getElementById("agendamento-wrapper").classList.add("hidden");
     }
     
     // Feedback de sucesso
@@ -196,7 +316,7 @@ async function carregarVideosIneditos() {
     mostrarLoading(true, "Carregando vídeos inéditos...");
     await ensureAuth();
 
-    // Buscar todos os vídeos de verbo
+    // Buscar todos os vídeos de verbos (tag alterada para "Verbos")
     const snapVideos = await db.collection("videos")
       .where("tags", "array-contains", TAG_ESPECIAL)
       .orderBy("data", "desc")
@@ -238,7 +358,7 @@ async function carregarVideosIneditos() {
     if (videos.length === 0) {
       document.getElementById("tituloText").textContent = "Todos os vídeos revisados!";
       document.getElementById("descricao").textContent = "Parabéns! Você já agendou revisão para todos os vídeos disponíveis. Novos vídeos aparecerão aqui quando disponíveis.";
-      document.querySelector(".agendamento-wrapper").classList.add("hidden");
+      document.getElementById("agendamento-wrapper").classList.add("hidden");
       mostrarLoading(false);
       return;
     }
@@ -371,55 +491,6 @@ function transformarLinks(texto){
   });
 }
 
-function salvarComentarios(idVideo, comentarios){
-  localStorage.setItem("comentarios_" + idVideo, JSON.stringify(comentarios));
-}
-
-function carregarComentarios(idVideo){
-  const dados = localStorage.getItem("comentarios_" + idVideo);
-  return dados ? JSON.parse(dados) : [];
-}
-
-function renderizarComentarios(){
-  const comentariosDiv = document.getElementById('comentarios');
-  comentariosDiv.innerHTML = "";
-  
-  if (videos.length === 0) {
-    comentariosDiv.innerHTML = "<p class='text-gray-400 text-center'>Nenhum vídeo carregado</p>";
-  }
-  
-  const comentarios = carregarComentarios(videos[indiceAtual].id);
-  
-  if (comentarios.length === 0) {
-    comentariosDiv.innerHTML = "<p class='text-gray-400 text-center'>Nenhum comentário ainda. Seja o primeiro a comentar!</p>";
-    return;
-  }
-  
-  comentarios.forEach(texto => {
-    const novoComentario = document.createElement('p');
-    novoComentario.className = "bg-zinc-800 p-2 rounded-xl";
-    novoComentario.innerHTML = transformarLinks(texto);
-    comentariosDiv.appendChild(novoComentario);
-  });
-}
-
-function adicionarComentario(){
-  if (videos.length === 0) return;
-  
-  const input = document.getElementById('inputComentario');
-  const valor = input.value.trim();
-  if(valor !== ""){
-    const comentarios = carregarComentarios(videos[indiceAtual].id);
-    comentarios.push(valor);
-    salvarComentarios(videos[indiceAtual].id, comentarios);
-    renderizarComentarios();
-    input.value = "";
-    mostrarFeedback('Comentário adicionado! 💬', 'sucesso');
-  } else {
-    mostrarFeedback('Digite um comentário antes de enviar.', 'aviso');
-  }
-}
-
 function atualizarDescricao(texto){
   const descricaoEl = document.getElementById("descricao");
   descricaoEl.innerHTML = transformarLinks(texto);
@@ -474,14 +545,19 @@ document.addEventListener('DOMContentLoaded', async function() {
   const btnProximo = document.getElementById('btnProximo');
   const inputComentario = document.getElementById('inputComentario');
   
+  // Adicionar evento ao botão de comentário
   if (btnComentario) btnComentario.addEventListener('click', adicionarComentario);
-  if (btnProximo) btnProximo.addEventListener('click', proximoVideo);
   
+  // Permitir enviar com Enter
   if (inputComentario) {
     inputComentario.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') adicionarComentario();
+      if (e.key === 'Enter') {
+        adicionarComentario();
+      }
     });
   }
+  
+  if (btnProximo) btnProximo.addEventListener('click', proximoVideo);
 
   configurarSistemaAgendamento();
   setupForceCloseButton();
