@@ -17,6 +17,9 @@ let videoEspecialAtual = null;
 let videosCarrossel = [];
 const TAG_ESPECIAL = "Pronuncia"; // Tag fixa para filtrar os vídeos
 
+// Variável para controlar o comentário sendo editado
+let comentarioEditando = null;
+
 // 🔹 Autenticação anônima
 async function ensureAuth() {
   if (!auth.currentUser) {
@@ -102,29 +105,37 @@ function mostrarFeedback(mensagem, tipo = 'sucesso') {
   }, 4000);
 }
 
-// 🔹 Função para salvar comentários no Firebase
-async function salvarComentario(comentarioTexto, videoId, usuario = 'Anônimo') {
+// 🔹 Função para salvar comentários no Firebase (corrigida)
+async function salvarComentario(comentarioTexto, videoId, usuario = 'Anônimo', comentarioId = null) {
   try {
-    // Mostrar loading
-    mostrarLoading(true, "Salvando comentário...");
+    mostrarLoading(true, comentarioId ? "Editando comentário..." : "Salvando comentário...");
     
-    // Adicionar documento à coleção 'comentarios'
-    await db.collection('comentarios').add({
-      texto: comentarioTexto,
-      videoId: videoId,
-      usuario: usuario,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      data: new Date().toLocaleString('pt-BR')
-    });
+    if (comentarioId) {
+      // 🔹 EDITAR comentário existente
+      await db.collection('comentarios').doc(comentarioId).update({
+        texto: comentarioTexto,
+        // REMOVER os campos de edição: editado e dataEdicao
+      });
+    } else {
+      // 🔹 NOVO comentário
+      await db.collection('comentarios').add({
+        texto: comentarioTexto,
+        videoId: videoId,
+        usuario: usuario,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        data: new Date().toLocaleString('pt-BR')
+      });
+    }
     
     // Feedback de sucesso
-    mostrarFeedback('Comentário salvo com sucesso!', 'sucesso');
+    mostrarFeedback(comentarioId ? 'Comentário editado com sucesso!' : 'Comentário salvo com sucesso!', 'sucesso');
     
     // Limpar campo de input
     document.getElementById('inputComentario').value = '';
     
     // Recarregar comentários
     await carregarComentarios(videoId);
+    
   } catch (error) {
     console.error('Erro ao salvar comentário:', error);
     mostrarFeedback('Erro ao salvar comentário: ' + error.message, 'erro');
@@ -133,6 +144,73 @@ async function salvarComentario(comentarioTexto, videoId, usuario = 'Anônimo') 
     mostrarLoading(false);
   }
 }
+
+
+
+
+
+
+// 🔹 Função para editar comentário no Firebase (CORRIGIDA)
+async function editarComentario(comentarioId, novoTexto) {
+  try {
+    // Usar a função salvarComentario com o ID existente
+    await salvarComentario(novoTexto, videos[indiceAtual].id, 'Anônimo', comentarioId);
+    
+    // 🔹 Restaurar o botão CORRETAMENTE
+    restaurarBotaoComentario();
+    
+  } catch (error) {
+    console.error('Erro ao editar comentário:', error);
+    mostrarFeedback('Erro ao editar comentário: ' + error.message, 'erro');
+  }
+}
+
+// 🔹 Função para restaurar o botão de comentário para o estado original
+function restaurarBotaoComentario() {
+  const btnComentario = document.getElementById('btnComentario');
+  const novoBtn = btnComentario.cloneNode(true);
+  btnComentario.parentNode.replaceChild(novoBtn, btnComentario);
+  
+  novoBtn.innerHTML = '➕';
+  novoBtn.onclick = adicionarComentario;
+  
+  // Resetar estado de edição
+  comentarioEditando = null;
+  document.getElementById('inputComentario').value = '';
+}
+
+
+
+
+
+
+
+
+// 🔹 Função para excluir comentário do Firebase
+async function excluirComentario(comentarioId) {
+  try {
+    mostrarLoading(true, "Excluindo comentário...");
+    
+    // Excluir documento da coleção 'comentarios'
+    await db.collection('comentarios').doc(comentarioId).delete();
+    
+    // Feedback de sucesso
+    mostrarFeedback('Comentário excluído com sucesso!', 'sucesso');
+    
+    // Recarregar comentários
+    await carregarComentarios(videos[indiceAtual].id);
+    
+  } catch (error) {
+    console.error('Erro ao excluir comentário:', error);
+    mostrarFeedback('Erro ao excluir comentário: ' + error.message, 'erro');
+  } finally {
+    mostrarLoading(false);
+  }
+}
+
+
+
+
 
 // 🔹 Função para carregar comentários do Firebase
 async function carregarComentarios(videoId) {
@@ -155,6 +233,7 @@ async function carregarComentarios(videoId) {
     
     snapshot.forEach(doc => {
       const comentario = doc.data();
+      comentario.id = doc.id; // Adicionar o ID do documento
       const comentarioElement = criarElementoComentario(comentario);
       comentariosContainer.appendChild(comentarioElement);
     });
@@ -165,19 +244,124 @@ async function carregarComentarios(videoId) {
   }
 }
 
-// 🔹 Função para criar elemento de comentário
+
+
+
+// 🔹 Função para criar elemento de comentário (sem usuário e data)
 function criarElementoComentario(comentario) {
   const div = document.createElement('div');
-  div.className = 'comentario bg-zinc-800 p-3 rounded-xl mb-2';
+  div.className = 'comentario bg-zinc-800 p-3 rounded-xl mb-2 relative';
   div.innerHTML = `
-    <p class="text-sm text-white">${comentario.texto}</p>
-    <div class="flex justify-between items-center mt-2">
-      <span class="text-xs text-gray-400">Por: ${comentario.usuario}</span>
-      <span class="text-xs text-gray-500">${comentario.data}</span>
+    <p class="text-sm text-white mb-2">${comentario.texto}</p>
+    <div class="absolute top-2 right-2 flex space-x-1">
+      <button class="btn-editar-comentario p-1 text-blue-400 hover:text-blue-300" data-id="${comentario.id}" data-texto="${comentario.texto}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      </button>
+      <button class="btn-excluir-comentario p-1 text-red-400 hover:text-red-300" data-id="${comentario.id}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </button>
     </div>
   `;
+  
+  // Adicionar event listeners para os botões de editar e excluir
+  const btnEditar = div.querySelector('.btn-editar-comentario');
+  const btnExcluir = div.querySelector('.btn-excluir-comentario');
+  
+  btnEditar.addEventListener('click', () => {
+    const comentarioId = btnEditar.getAttribute('data-id');
+    const comentarioTexto = btnEditar.getAttribute('data-texto');
+    iniciarEdicaoComentario(comentarioId, comentarioTexto);
+  });
+  
+  btnExcluir.addEventListener('click', () => {
+    const comentarioId = btnExcluir.getAttribute('data-id');
+    confirmarExclusaoComentario(comentarioId);
+  });
+  
   return div;
 }
+
+  
+
+
+// 🔹 Função para iniciar a edição de um comentário (CORRIGIDA)
+function iniciarEdicaoComentario(comentarioId, comentarioTexto) {
+  comentarioEditando = comentarioId;
+  const inputComentario = document.getElementById('inputComentario');
+  const btnComentario = document.getElementById('btnComentario');
+  
+  // Preencher o input com o texto do comentário
+  inputComentario.value = comentarioTexto;
+  inputComentario.focus();
+  
+  // 🔹 REMOVER todos os event listeners anteriores primeiro
+  const novoBtn = btnComentario.cloneNode(true);
+  btnComentario.parentNode.replaceChild(novoBtn, btnComentario);
+  
+  // Alterar o botão para modo edição
+  novoBtn.innerHTML = '💾';
+  novoBtn.onclick = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const novoTexto = inputComentario.value.trim();
+    if (novoTexto) {
+      editarComentario(comentarioId, novoTexto);
+    } else {
+      mostrarFeedback('O comentário não pode estar vazio.', 'aviso');
+    }
+    return false;
+  };
+  
+  mostrarFeedback('Modo de edição ativado. Edite o comentário e clique em salvar.', 'info');
+}
+
+
+
+
+
+
+// 🔹 Função para confirmar exclusão de comentário
+function confirmarExclusaoComentario(comentarioId) {
+  if (confirm('Tem certeza que deseja excluir este comentário?')) {
+    excluirComentario(comentarioId);
+  }
+}
+
+
+
+
+
+
+
+// 🔹 Função para adicionar comentário (SIMPLIFICADA)
+async function adicionarComentario() {
+  if (videos.length === 0) return;
+  
+  const input = document.getElementById('inputComentario');
+  const comentarioTexto = input.value.trim();
+  
+  if (comentarioTexto !== "") {
+    try {
+      // Obter o ID do vídeo atual
+      const videoId = videos[indiceAtual].id;
+      
+      // Salvar o comentário no Firebase (novo comentário)
+      await salvarComentario(comentarioTexto, videoId);
+      
+    } catch (error) {
+      console.error("Erro ao adicionar comentário:", error);
+      mostrarFeedback("Erro ao salvar comentário. Tente novamente.", "erro");
+    }
+  } else {
+    mostrarFeedback("Digite um comentário antes de enviar.", "aviso");
+  }
+}
+
 
 // 🔹 Função para adicionar comentário (usando Firebase)
 async function adicionarComentario() {
@@ -191,7 +375,7 @@ async function adicionarComentario() {
       // Obter o ID do vídeo atual
       const videoId = videos[indiceAtual].id;
       
-      // Salvar o comentário no Firebase
+      // Salvar o comentário no Firebase (novo comentário)
       await salvarComentario(comentarioTexto, videoId);
       
     } catch (error) {
@@ -202,6 +386,52 @@ async function adicionarComentario() {
     mostrarFeedback("Digite um comentário antes de enviar.", "aviso");
   }
 }
+
+// 🔹 Gerenciador de evento do Enter (CORRIGIDO)
+function configurarEventoEnter() {
+  const inputComentario = document.getElementById('inputComentario');
+  
+  if (!inputComentario) {
+    console.error('Input de comentário não encontrado!');
+    return;
+  }
+  
+  // Remover event listeners anteriores
+  const novoInput = inputComentario.cloneNode(true);
+  inputComentario.parentNode.replaceChild(novoInput, inputComentario);
+  
+  novoInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (comentarioEditando) {
+        // Se está editando, chama a função de edição
+        const novoTexto = this.value.trim();
+        if (novoTexto) {
+          editarComentario(comentarioEditando, novoTexto);
+        }
+      } else {
+        // Se não está editando, chama a função de adicionar
+        adicionarComentario();
+      }
+      return false;
+    }
+  });
+}
+
+// 🔹 Função para renderizar comentários
+function renderizarComentarios(){
+  const comentariosDiv = document.getElementById('comentarios');
+  comentariosDiv.innerHTML = "";
+  
+  if (videos.length === 0) {
+    comentariosDiv.innerHTML = "<p class='text-gray-400 text-center'>Nenhum vídeo carregado</p>";
+    return;
+  }
+  
+  // Carregar comentários do Firebase para o vídeo atual
+  carregarComentarios(videos[indiceAtual].id);
+}
+
 
 // 🔹 Função para renderizar comentários
 function renderizarComentarios(){
@@ -539,28 +769,56 @@ window.addEventListener('unhandledrejection', function() {
 });
 
 // Inicializar a página
+// Inicialização SIMPLIFICADA e FUNCIONAL
 document.addEventListener('DOMContentLoaded', async function() {
+  console.log('DOM carregado, iniciando...');
+  
+  // Configurações básicas
   const btnComentario = document.getElementById('btnComentario');
-  const btnProximo = document.getElementById('btnProximo');
   const inputComentario = document.getElementById('inputComentario');
+  const btnProximo = document.getElementById('btnProximo');
   
-  // Adicionar evento ao botão de comentário
-  if (btnComentario) btnComentario.addEventListener('click', adicionarComentario);
-  
-  // Permitir enviar com Enter
-  if (inputComentario) {
-    inputComentario.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
+  // Evento do botão de comentário
+  if (btnComentario) {
+    btnComentario.onclick = function(e) {
+      e.preventDefault();
+      if (comentarioEditando) {
+        const texto = inputComentario.value.trim();
+        if (texto) editarComentario(comentarioEditando, texto);
+      } else {
         adicionarComentario();
       }
-    });
+      return false;
+    };
   }
   
-  if (btnProximo) btnProximo.addEventListener('click', proximoVideo);
-
+  // Evento do Enter no input
+  if (inputComentario) {
+    inputComentario.onkeypress = function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (comentarioEditando) {
+          const texto = this.value.trim();
+          if (texto) editarComentario(comentarioEditando, texto);
+        } else {
+          adicionarComentario();
+        }
+        return false;
+      }
+    };
+  }
+  
+  // Evento do botão próximo
+  if (btnProximo) {
+    btnProximo.onclick = proximoVideo;
+  }
+  
+  // Configurar outros sistemas
   configurarSistemaAgendamento();
   setupForceCloseButton();
   
-  // Carregar vídeos inéditos (sem revisão agendada)
+  // Carregar vídeos
+  console.log('Carregando vídeos...');
   await carregarVideosIneditos();
+  console.log('Vídeos carregados!');
 });
