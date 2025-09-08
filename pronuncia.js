@@ -265,32 +265,45 @@ function transformarLinks(texto) {
 
 
 
-// 🔹 SUBSTITUA A FUNÇÃO EXISTENTE POR ESTA NOVA VERSÃO
+// 🔹 Versão com limite de altura e botão "Ver mais"
 function criarElementoComentario(comentario) {
   const div = document.createElement('div');
-  div.className = 'comentario bg-zinc-800 p-3 rounded-xl mb-2 flex justify-between items-start gap-3';
+  div.className = 'comentario bg-zinc-800 p-3 rounded-xl mb-2';
+  
+  const isLongComment = comentario.texto.length > 200;
+  const displayText = isLongComment ? comentario.texto.substring(0, 200) + '...' : comentario.texto;
   
   div.innerHTML = `
-    <div class="flex-1 min-w-0">
-      <p class="text-sm text-white break-words">${transformarLinks(comentario.texto)}</p>
-    </div>
-    <div class="flex flex-col space-y-1 flex-shrink-0">
-      <button class="btn-editar-comentario p-1 text-blue-400 hover:text-blue-300 bg-blue-900 bg-opacity-50 rounded" data-id="${comentario.id}" data-texto="${comentario.texto}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-      </button>
-      <button class="btn-excluir-comentario p-1 text-red-400 hover:text-red-300 bg-red-900 bg-opacity-50 rounded" data-id="${comentario.id}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-        </svg>
-      </button>
+    <div class="grid grid-cols-1 gap-2">
+      <div class="comentario-texto relative">
+        <p class="text-sm text-white break-words">${transformarLinks(displayText)}</p>
+        ${isLongComment ? `
+          <button class="text-blue-400 text-xs mt-1 hover:underline ver-mais-btn">
+            Ver mais
+          </button>
+        ` : ''}
+      </div>
+      <div class="flex justify-between items-center">
+        <div class="flex space-x-1">
+          <button class="btn-editar-comentario p-1 text-blue-400 hover:text-blue-300 bg-blue-900 bg-opacity-50 rounded" data-id="${comentario.id}" data-texto="${comentario.texto}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button class="btn-excluir-comentario p-1 text-red-400 hover:text-red-300 bg-red-900 bg-opacity-50 rounded" data-id="${comentario.id}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   `;
   
   // Adicionar event listeners
   const btnEditar = div.querySelector('.btn-editar-comentario');
   const btnExcluir = div.querySelector('.btn-excluir-comentario');
+  const verMaisBtn = div.querySelector('.ver-mais-btn');
   
   btnEditar.addEventListener('click', () => {
     const comentarioId = btnEditar.getAttribute('data-id');
@@ -302,6 +315,14 @@ function criarElementoComentario(comentario) {
     const comentarioId = btnExcluir.getAttribute('data-id');
     confirmarExclusaoComentario(comentarioId);
   });
+  
+  if (verMaisBtn) {
+    verMaisBtn.addEventListener('click', () => {
+      const textoCompleto = div.querySelector('p');
+      textoCompleto.innerHTML = transformarLinks(comentario.texto);
+      verMaisBtn.style.display = 'none';
+    });
+  }
   
   return div;
 }
