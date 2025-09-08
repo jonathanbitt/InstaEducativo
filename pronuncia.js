@@ -244,15 +244,29 @@ async function carregarComentarios(videoId) {
   }
 }
 
+// 🔹 Função para transformar URLs em links clicáveis
+function transformarLinks(texto) {
+  if (!texto) return '';
+  
+  // Regex para detectar URLs (http, https, www)
+  const urlRegex = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]|www\.[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
+  
+  return texto.replace(urlRegex, (url) => {
+    let href = url;
+    if (!url.startsWith('http')) {
+      href = 'https://' + url;
+    }
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline">${url}</a>`;
+  });
+}
 
 
-
-// 🔹 Função para criar elemento de comentário (sem usuário e data)
+// 🔹 Função para criar elemento de comentário (COM LINKS CLICÁVEIS)
 function criarElementoComentario(comentario) {
   const div = document.createElement('div');
   div.className = 'comentario bg-zinc-800 p-3 rounded-xl mb-2 relative';
   div.innerHTML = `
-    <p class="text-sm text-white mb-2">${comentario.texto}</p>
+    <p class="text-sm text-white mb-2">${transformarLinks(comentario.texto)}</p>
     <div class="absolute top-2 right-2 flex space-x-1">
       <button class="btn-editar-comentario p-1 text-blue-400 hover:text-blue-300" data-id="${comentario.id}" data-texto="${comentario.texto}">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -284,7 +298,6 @@ function criarElementoComentario(comentario) {
   
   return div;
 }
-
   
 
 

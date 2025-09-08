@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shorts Style - Pronúncia</title>
+  <title>Revisão Diária</title>
   <link rel="stylesheet" href="style.css">
   <!-- Tailwind CSS via CDN (versão otimizada) -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -13,11 +13,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 </head>
 <body class="bg-black text-white flex flex-col min-h-screen">
-  <!-- Cabeçalho com título e badge de Pronúncia -->
-  <div class="p-4 bg-black text-center text-xl font-bold flex justify-center items-center" id="tituloVideo">
+  <!-- Cabeçalho -->
+  <div class="p-4 bg-black text-center text-xl font-bold flex justify-center items-center">
     <div class="loader hidden" id="loader"></div>
-    <span id="tituloText">Carregando vídeos de Pronúncia...</span>
-    <span class="badge-pronuncia">Pronúncia</span>
+    <span id="tituloText">Revisão Diária - </span>
+    <span class="badge-revisao" id="contador-revisoes">0 pendentes</span>
+    <a href="index.html" class="ml-4 text-sm bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded">Voltar</a>
   </div>
 
   <!-- Layout principal -->
@@ -35,14 +36,21 @@
       </div>
     </div>
 
-    <!-- Descrição e comentários à direita (50% da tela) -->
+    <!-- Painel de controle à direita (50% da tela) -->
     <div class="descricao-wrapper bg-zinc-900 p-4 rounded-xl">
-      <h2 class="text-lg font-bold mb-2">Descrição <span class="badge-pronuncia">Pronúncia</span></h2>
+      <h2 class="text-lg font-bold mb-2">Descrição <span class="badge-revisao">Revisão</span></h2>
       <p id="descricao" class="text-sm mb-4">Carregando descrição...</p>
+      
+      <!-- Informações de agendamento -->
+      <div class="info-agendamento bg-blue-900 p-3 rounded-lg mb-4">
+        <h3 class="font-bold mb-1">Informações de Revisão</h3>
+        <p id="info-agendamento" class="text-xs">Carregando informações...</p>
+        <p id="dias-atraso" class="text-xs text-yellow-300 mt-1 hidden"></p>
+      </div>
 
       <!-- Sistema de Agendamento de Revisão -->
       <div class="agendamento-wrapper bg-purple-900 p-3 rounded-lg mb-4">
-        <h3 class="font-bold mb-2">Agendar Revisão</h3>
+        <h3 class="font-bold mb-2">Nova Revisão</h3>
         <div class="flex items-center gap-2">
           <select id="intervalo-revisao" class="flex-1 bg-gray-700 text-white rounded px-3 py-2">
             <option value="1">1 dia</option>
@@ -67,18 +75,23 @@
         <button id="btnComentario" class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-xl font-bold">➕</button>
       </div>
 
-      <!-- Botão próximo vídeo -->
-      <div class="proximo-btn-wrapper">
-        <button id="btnProximo" class="bg-blue-600 hover:bg-blue-700 w-full py-3 rounded-xl font-bold">Próximo Vídeo ▶️</button>
+      <!-- Botões de controle -->
+      <div class="botoes-controle flex gap-2">
+        <button id="btn-marcar-revisado" class="bg-green-600 hover:bg-green-700 flex-1 py-3 rounded-xl font-bold">
+          ✅ Marcar como Revisado
+        </button>
+        <button id="btn-proximo" class="bg-blue-600 hover:bg-blue-700 flex-1 py-3 rounded-xl font-bold">
+          Próximo ▶️
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Carrossel de Histórico -->
-  <div class="carrossel-container hidden" id="carrosselContainer">
-    <h3 class="carrossel-title">Outros Vídeos de Pronúncia <span class="badge-pronuncia">Pronúncia</span></h3>
-    <div class="carrossel" id="carrosselHistorico">
-      <!-- Itens do carrossel serão inseridos aqui via JavaScript -->
+  <!-- Lista de Revisões Pendentes -->
+  <div class="carrossel-container" id="listaRevisoesContainer">
+    <h3 class="carrossel-title">Revisões Pendentes</h3>
+    <div class="carrossel" id="listaRevisoes">
+      <!-- Itens da lista serão inseridos aqui via JavaScript -->
     </div>
   </div>
 
@@ -96,41 +109,6 @@
     </div>
   </div>
 
-
-
-<!-- Botões fixos responsivos -->
-<div class="fixed bottom-4 right-4 z-40">
-  <!-- Container principal -->
-  <div class="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
-    <!-- Botão de Verbos -->
-    <a href="verbo.html" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-4 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-      <span class="hidden sm:inline">Verbos</span>
-      <span class="sm:hidden">Verb</span>
-    </a>
-    
-    <!-- Botão de Expressões -->
-    <a href="expressoes.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-      </svg>
-      <span class="hidden sm:inline">Expressões</span>
-      <span class="sm:hidden">Expr</span>
-    </a>
-    
-    <!-- Botão de Revisão -->
-    <a href="revisao.html" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <span class="hidden sm:inline">Revisão</span>
-      <span class="sm:hidden">Rev</span>
-    </a>
-  </div>
-</div>
-
-  <script src="pronuncia.js"></script>
+  <script src="revisao.js"></script>
 </body>
 </html>
