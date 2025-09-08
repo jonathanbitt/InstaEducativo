@@ -389,5 +389,59 @@ button:disabled {
   background-color: #2563eb;
 }
 
+/* Estilos para comentários longos */
+.comentario {
+  max-width: 100%;
+  word-wrap: break-word;
+}
 
+.comentario-texto {
+  min-height: 20px;
+  overflow-wrap: break-word;
+}
+
+/* Garantir que quebras de linha sejam respeitadas */
+.comentario-texto p {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Botões com fundo semi-transparente para melhor contraste */
+.btn-editar-comentario, 
+.btn-excluir-comentario {
+  transition: all 0.2s ease;
+  backdrop-filter: blur(5px);
+}
+
+.btn-editar-comentario:hover, 
+.btn-excluir-comentario:hover {
+  transform: scale(1.1);
+}
+
+/* Scroll suave para comentários muito longos */
+.comentarios-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ec4899 #18181b;
+}
+
+.comentarios-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comentarios-wrapper::-webkit-scrollbar-track {
+  background: #18181b;
+  border-radius: 10px;
+}
+
+.comentarios-wrapper::-webkit-scrollbar-thumb {
+  background: #ec4899;
+  border-radius: 10px;
+}
+
+.comentarios-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #be185d;
+}
 
