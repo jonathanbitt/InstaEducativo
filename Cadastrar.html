@@ -82,6 +82,9 @@
     <select id="autor" name="autor"></select>
     <button type="button" id="novoAutorBtn">Cadastrar novo autor</button>
 
+    <label for="numeroVideo">Número do vídeo (código alfanumérico):</label>
+    <input type="text" id="numeroVideo" name="numeroVideo">
+
     <label>
       <input type="checkbox" id="especial" name="especial">
       Vídeo Especial (do dia)
@@ -154,6 +157,7 @@
       const descricao = form.descricao.value;
       const tags = form.tags.value.split(".").map(t => t.trim()).filter(t => t !== "");
       const autor = form.autor.value;
+      const numeroVideo = form.numeroVideo.value;
       const especial = form.especial.checked;
 
       try {
@@ -164,6 +168,7 @@
           descricao,
           tags,
           autor,
+          numeroVideo,
           especial,
           data: firebase.firestore.FieldValue.serverTimestamp()
         });
