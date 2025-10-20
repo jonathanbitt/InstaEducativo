@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Histórico do Vídeo</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .hidden { display: none; }
+    .feedback-item { position: relative; transition: all 0.3s; }
+    .feedback-global { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+  </style>
+</head>
+<body class="bg-zinc-900 text-white p-4">
+
+  <h1 class="text-2xl font-bold mb-4" id="tituloVideo">Título do vídeo</h1>
+  <iframe id="videoFrame" width="560" height="315" src="" frameborder="0" allowfullscreen class="mb-4"></iframe>
+  <p id="descricao" class="mb-4">Descrição do vídeo...</p>
+
+  <!-- Input de comentário -->
+  <div class="comentarios-wrapper mb-4">
+    <div class="flex space-x-2 mb-2">
+      <input id="inputComentario" type="text" placeholder="Escreva um comentário..." class="flex-1 p-2 rounded bg-gray-800 text-white">
+      <button id="btnComentario" class="p-2 rounded bg-blue-600 text-white">➕</button>
+    </div>
+    <div id="comentarios" class="space-y-2">
+      <p class="text-gray-400 text-center">Carregando comentários...</p>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
+    <span class="text-white text-lg">Processando...</span>
+    <button id="force-close-loading" class="ml-4 p-2 bg-red-600 rounded hidden">Fechar</button>
+  </div>
+
+  <!-- Feedback global -->
+  <div id="feedback-global" class="feedback-global"></div>
+
+  <script>
+    // 🔹 Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyA9r7AfToG9msI_guh8xY_PJBJXfrF_IPc",
+      authDomain: "instagraneducativo.firebaseapp.com",
+      projectId: "instagraneducativo",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    let comentarioEditando = null;
+ // Tenta pegar o ID do vídeo do localStorage
+let videoAtualId = localStorage.getItem('videoParaAssistir');
+if (!videoAtualId) {
+  alert('Nenhum vídeo selecionado. Retornando à página anterior.');
+  window.location.href = 'historico.html';
+}
+
+    // 🔹 Autenticação anônima
+    async function ensureAuth() {
+      if (!auth.currentUser) {
+        await auth.signInAnonymously();
+        console.log("Autenticação anônima concluída.");
+      }
+    }
+
+    // 🔹 Mostrar/Ocultar Loading
+    function mostrarLoading(mostrar, mensagem = "Processando...") {
+      const overlay = document.getElementById('loading-overlay');
+      const texto = overlay.querySelector('span');
+      if (texto) texto.textContent = mensagem;
+      overlay.classList.toggle('hidden', !mostrar);
+      const btn = document.getElementById('force-close-loading');
+      if (btn) btn.classList.toggle('hidden', !mostrar);
+    }
+
+    // 🔹 Feedback
+    function mostrarFeedback(mensagem, tipo = 'sucesso') {
+      const cores = { sucesso: 'bg-green-500 border-green-600', erro: 'bg-red-500 border-red-600', info: 'bg-blue-500 border-blue-600', aviso: 'bg-yellow-500 border-yellow-600' };
+      const icones = { sucesso: '✅', erro: '❌', info: 'ℹ️', aviso: '⚠️' };
+      const el = document.getElementById('feedback-global');
+      const div = document.createElement('div');
+      div.className = `feedback-item ${cores[tipo]} mb-2 p-3 rounded-lg border-l-4 transition-all`;
+      div.innerHTML = `<div class="flex items-center"><span class="mr-2 text-lg">${icones[tipo]}</span><span>${mensagem}</span></div>`;
+      el.appendChild(div);
+      setTimeout(() => div.remove(), 4000);
+    }
+
+    // 🔹 Transformar links
+    function transformarLinks(texto) {
+      if (!texto) return '';
+      const urlRegex = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]|www\.[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
+      return texto.replace(urlRegex, (url) => {
+        let href = url.startsWith('http') ? url : 'https://' + url;
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline">${url}</a>`;
+      });
+    }
+
+    // 🔹 Salvar comentário
+    async function salvarComentario(texto, usuario = 'Anônimo', comentarioId = null) {
+      try {
+        mostrarLoading(true, comentarioId ? "Editando comentário..." : "Salvando comentário...");
+        if (comentarioId) {
+          await db.collection('comentarios').doc(comentarioId).update({ texto });
+        } else {
+          await db.collection('comentarios').add({
+            texto,
+            videoId: videoAtualId,
+            usuario,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        document.getElementById('inputComentario').value = '';
+        comentarioEditando = null;
+        carregarComentarios();
+        mostrarFeedback(comentarioId ? "Comentário editado!" : "Comentário adicionado!", "sucesso");
+      } catch (e) {
+        console.error(e);
+        mostrarFeedback("Erro ao salvar comentário", "erro");
+      } finally {
+        mostrarLoading(false);
+      }
+    }
+
+    // 🔹 Carregar comentários
+    async function carregarComentarios() {
+      const container = document.getElementById('comentarios');
+      container.innerHTML = '<p class="text-gray-400 text-center">Carregando comentários...</p>';
+      const snapshot = await db.collection('comentarios')
+        .where('videoId', '==', videoAtualId)
+        .orderBy('timestamp', 'desc')
+        .get();
+      container.innerHTML = '';
+      if (snapshot.empty) {
+        container.innerHTML = '<p class="text-gray-400 text-center">Nenhum comentário ainda.</p>';
+        return;
+      }
+      snapshot.forEach(doc => {
+        const c = doc.data();
+        const div = document.createElement('div');
+        div.className = 'comentario bg-zinc-800 p-3 rounded-xl mb-2';
+        const isLong = c.texto.length > 200;
+        const displayText = isLong ? c.texto.substring(0, 200) + "..." : c.texto;
+        div.innerHTML = `
+          <div class="comentario-texto relative">
+            <p class="text-sm text-white break-words">${transformarLinks(displayText)}</p>
+            ${isLong ? '<button class="text-blue-400 text-xs mt-1 hover:underline ver-mais-btn">Ver mais</button>' : ''}
+          </div>
+          <div class="flex justify-between items-center mt-1">
+            <div class="flex space-x-1">
+              <button class="editar p-1 text-blue-400 hover:text-blue-300 bg-blue-900 bg-opacity-50 rounded" data-id="${doc.id}" data-texto="${c.texto}">✏️</button>
+              <button class="excluir p-1 text-red-400 hover:text-red-300 bg-red-900 bg-opacity-50 rounded" data-id="${doc.id}">🗑️</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+
+        const btnEditar = div.querySelector('.editar');
+        const btnExcluir = div.querySelector('.excluir');
+        const btnVerMais = div.querySelector('.ver-mais-btn');
+
+        btnEditar.onclick = () => iniciarEdicaoComentario(doc.id, c.texto);
+        btnExcluir.onclick = () => excluirComentario(doc.id);
+        if (btnVerMais) {
+          btnVerMais.onclick = () => {
+            div.querySelector('p').innerHTML = transformarLinks(c.texto);
+            btnVerMais.style.display = 'none';
+          };
+        }
+      });
+    }
+
+    // 🔹 Editar comentário
+    function iniciarEdicaoComentario(id, texto) {
+      comentarioEditando = id;
+      const input = document.getElementById('inputComentario');
+      const btn = document.getElementById('btnComentario');
+      input.value = texto;
+      input.focus();
+      btn.textContent = '💾';
+      btn.onclick = () => {
+        const novoTexto = input.value.trim();
+        if (novoTexto) salvarComentario(novoTexto, 'Anônimo', comentarioEditando);
+        btn.textContent = '➕';
+        btn.onclick = adicionarComentario;
+      };
+    }
+
+    // 🔹 Excluir comentário
+    async function excluirComentario(id) {
+      if (confirm('Deseja excluir este comentário?')) {
+        await db.collection('comentarios').doc(id).delete();
+        carregarComentarios();
+      }
+    }
+
+    // 🔹 Adicionar comentário
+    function adicionarComentario() {
+      const texto = document.getElementById('inputComentario').value.trim();
+      if (texto) salvarComentario(texto);
+      else mostrarFeedback('Digite algo antes de enviar', 'aviso');
+    }
+
+    // 🔹 Enter
+    document.getElementById('inputComentario').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (comentarioEditando) document.getElementById('btnComentario').click();
+        else adicionarComentario();
+      }
+    });
+
+    // 🔹 Force close loading
+    document.getElementById('force-close-loading').onclick = () => mostrarLoading(false);
+
+    // 🔹 Inicialização
+  document.addEventListener('DOMContentLoaded', async () => {
+  await ensureAuth();
+
+  // Colocar vídeo no iframe
+  const iframe = document.getElementById('videoFrame');
+  iframe.src = `https://www.youtube.com/embed/${videoAtualId}?autoplay=1`;
+
+  // Carregar comentários
+  carregarComentarios();
+});
+
+  </script>
+</body>
+</html>
