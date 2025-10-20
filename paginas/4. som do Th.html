@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sons do "TH" em Inglês</title>
+    <style>
+        :root {
+            --primary: #6a5acd;
+            --secondary: #9370db;
+            --accent: #ff7f50;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --success: #28a745;
+            --info: #17a2b8;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f1 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Menu Lateral */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-header p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .menu {
+            list-style: none;
+        }
+        
+        .menu-item {
+            margin-bottom: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-item a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-item a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .menu-item.active a {
+            background-color: rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+        }
+        
+        .menu-icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        /* Conteúdo Principal */
+        .content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header p {
+            font-size: 1.3rem;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.95;
+        }
+        
+        .topics {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 25px;
+        }
+        
+        .topic-card {
+            background-color: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border-left: 5px solid var(--primary);
+        }
+        
+        .topic-card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .topic-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .topic-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .topic-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .topic-icon {
+            font-size: 1.8rem;
+            margin-left: auto;
+        }
+        
+        .concept {
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: var(--dark);
+            font-size: 1.15rem;
+            line-height: 1.5;
+        }
+        
+        .analysis {
+            background-color: #f0f4ff;
+            padding: 18px;
+            border-radius: 10px;
+            margin: 18px 0;
+            border-left: 4px solid var(--info);
+            font-size: 1rem;
+        }
+        
+        .examples {
+            margin: 18px 0;
+        }
+        
+        .example {
+            display: flex;
+            margin-bottom: 12px;
+            padding: 12px;
+            background-color: #f8faff;
+            border-radius: 8px;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+        
+        .example:hover {
+            background-color: #eef2ff;
+        }
+        
+        .example-english {
+            flex: 1;
+            font-weight: bold;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+        
+        .example-portuguese {
+            flex: 1;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+        
+        .play-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .play-btn:hover {
+            background: var(--secondary);
+            transform: scale(1.1);
+        }
+        
+        .play-btn.playing {
+            background: var(--accent);
+            transform: scale(1.1);
+        }
+        
+        .mini-synthesis {
+            background: linear-gradient(135deg, var(--accent), #FF8E8E);
+            color: white;
+            padding: 18px;
+            border-radius: 10px;
+            margin-top: 18px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .summary {
+            margin-top: 50px;
+            background-color: white;
+            border-radius: 16px;
+            padding: 35px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+        
+        .summary h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 30px;
+            font-size: 2rem;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .summary h2::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 3px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .summary-item {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .summary-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .summary-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .summary-item h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .summary-item p {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .pronunciation-tip {
+            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            text-align: center;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pronunciation-tip h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .pronunciation-tip p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        /* Responsividade */
+        @media (max-width: 1100px) {
+            .topics {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .content {
+                margin-left: 0;
+            }
+            
+            .menu {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .menu-item {
+                margin: 5px;
+            }
+            
+            .menu-item a {
+                padding: 8px 12px;
+            }
+            
+            .example {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .example-english, .example-portuguese {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .header p {
+                font-size: 1.1rem;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Menu Lateral -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1>💨 Aula Completa</h1>
+                <p>Os Sons de "TH" em Inglês</p>
+            </div>
+            <ul class="menu">
+                <li class="menu-item active"><a href="#intro"><span class="menu-icon">💨</span> Introdução</a></li>
+                <li class="menu-item"><a href="#topic1"><span class="menu-icon">1️⃣</span> O Mistério do "TH"</a></li>
+                <li class="menu-item"><a href="#topic2"><span class="menu-icon">2️⃣</span> "TH" Surdo</a></li>
+                <li class="menu-item"><a href="#topic3"><span class="menu-icon">3️⃣</span> "TH" Sonoro</a></li>
+                <li class="menu-item"><a href="#topic4"><span class="menu-icon">4️⃣</span> Palavras Especiais</a></li>
+                <li class="menu-item"><a href="#topic5"><span class="menu-icon">5️⃣</span> Pronúncia Natural</a></li>
+                <li class="menu-item"><a href="#topic6"><span class="menu-icon">6️⃣</span> Etimologia</a></li>
+                <li class="menu-item"><a href="#summary"><span class="menu-icon">🌟</span> Resumo Visual</a></li>
+            </ul>
+        </nav>
+        
+        <!-- Conteúdo Principal -->
+        <main class="content">
+            <div class="header" id="intro">
+                <h1>💨 AULA COMPLETA: OS SONS DE "TH" EM INGLÊS</h1>
+                <p>O sopro da língua inglesa — pequeno, sutil e poderoso.</p>
+            </div>
+            
+            <div class="topics">
+                <!-- Tópico 1 -->
+                <div class="topic-card" id="topic1">
+                    <div class="topic-header">
+                        <div class="topic-number">1</div>
+                        <h2 class="topic-title">O Mistério do "TH" – Um Som que o Português Não Tem</h2>
+                        <div class="topic-icon">❓</div>
+                    </div>
+                    <div class="concept">Conceito principal: O "TH" em inglês representa dois sons que não existem naturalmente em português. Eles pertencem à família dos sons interdentais — produzidos quando a língua toca levemente os dentes superiores, deixando o ar escapar.</div>
+                    <div class="analysis">
+                        <p><strong>Análise detalhada:</strong> Na escrita inglesa, "TH" é uma herança do antigo alfabeto anglo-saxão. Antes de existir a combinação "th", os escribas usavam uma letra especial chamada thorn (þ), que representava justamente esse som sibilante e arejado. Quando o alfabeto latino substituiu o antigo, o som permaneceu — apenas mudou a forma de ser escrito. Esse som aparece em palavras como think, this, Thailand, thousand, e até em palavras importadas, como asthma.</p>
+                    </div>
+                    <div class="examples">
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="think">▶</button>
+                                think
+                            </div>
+                            <div class="example-portuguese">→ pensar</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="this">▶</button>
+                                this
+                            </div>
+                            <div class="example-portuguese">→ este/esta</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="Thailand">▶</button>
+                                Thailand
+                            </div>
+                            <div class="example-portuguese">→ Tailândia</div>
+                        </div>
+                    </div>
+                    <div class="mini-synthesis">👅 "TH" = som interdental: língua entre os dentes + ar suave.</div>
+                </div>
+                
+                <!-- Tópico 2 -->
+                <div class="topic-card" id="topic2">
+                    <div class="topic-header">
+                        <div class="topic-number">2</div>
+                        <h2 class="topic-title">O "TH" Surdo – Como em think, thank, theatre</h2>
+                        <div class="topic-icon">🌬️</div>
+                    </div>
+                    <div class="concept">Conceito principal: É o som /θ/ (sem vibração das cordas vocais). Chama-se "voiceless TH" porque o ar sai livre, sem vibração na garganta.</div>
+                    <div class="analysis">
+                        <p><strong>Análise detalhada:</strong> Para produzi-lo:
+                        1. Coloque a ponta da língua entre os dentes.
+                        2. Sopre o ar suavemente, sem usar a voz.
+                        3. Você deve sentir o ar sair — como se dissesse "f" e "s" ao mesmo tempo, mas com a língua mais à frente.
+                        Compare com o português: Em "think", o "th" não é "t" nem "f" — é um som no meio do caminho.</p>
+                    </div>
+                    <div class="examples">
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="think">▶</button>
+                                think
+                            </div>
+                            <div class="example-portuguese">→ pensar</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="thank">▶</button>
+                                thank
+                            </div>
+                            <div class="example-portuguese">→ agradecer</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="theatre">▶</button>
+                                theatre
+                            </div>
+                            <div class="example-portuguese">→ teatro</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="Thursday">▶</button>
+                                Thursday
+                            </div>
+                            <div class="example-portuguese">→ quinta-feira</div>
+                        </div>
+                    </div>
+                    <div class="mini-synthesis">🌬️ Som /θ/ = ar + língua entre dentes (sem voz).</div>
+                </div>
+                
+                <!-- Tópico 3 -->
+                <div class="topic-card" id="topic3">
+                    <div class="topic-header">
+                        <div class="topic-number">3</div>
+                        <h2 class="topic-title">O "TH" Sonoro – Como em this, that, there</h2>
+                        <div class="topic-icon">🔊</div>
+                    </div>
+                    <div class="concept">Conceito principal: É o som /ð/ (com vibração das cordas vocais). Chamado "voiced TH", porque a garganta vibra ao produzi-lo.</div>
+                    <div class="analysis">
+                        <p><strong>Análise detalhada:</strong> A posição da língua é idêntica ao "TH" surdo — entre os dentes.
+                        A diferença está na vibração:
+                        • Toque o pescoço e diga this; sentirá a garganta vibrar.
+                        • Faça o mesmo com think; perceberá o silêncio.
+                        Curiosamente, as palavras com "TH" sonoro tendem a ser mais antigas no inglês, muitas herdadas do vocabulário cotidiano das tribos germânicas. O "TH" surdo, ao contrário, aparece com mais frequência em palavras de origem grega ou culta (theatre, thesis, therapy).</p>
+                    </div>
+                    <div class="examples">
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="this">▶</button>
+                                this
+                            </div>
+                            <div class="example-portuguese">→ este/esta</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="that">▶</button>
+                                that
+                            </div>
+                            <div class="example-portuguese">→ aquele/aquela</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="brother">▶</button>
+                                brother
+                            </div>
+                            <div class="example-portuguese">→ irmão</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="mother">▶</button>
+                                mother
+                            </div>
+                            <div class="example-portuguese">→ mãe</div>
+                        </div>
+                    </div>
+                    <div class="mini-synthesis">🔊 Som /ð/ = voz + língua entre dentes (com vibração).</div>
+                </div>
+                
+                <!-- Tópico 4 -->
+                <div class="topic-card" id="topic4">
+                    <div class="topic-header">
+                        <div class="topic-number">4</div>
+                        <h2 class="topic-title">O "TH" em Palavras Especiais – Casos Curiosos</h2>
+                        <div class="topic-icon">🧩</div>
+                    </div>
+                    <div class="concept">Conceito principal: Nem todo "TH" é pronunciado como /θ/ ou /ð/. Em certos casos, ele muda de som ou até desaparece.</div>
+                    <div class="analysis">
+                        <p><strong>Análise detalhada:</strong>
+                        • Thailand: o "TH" soa como um T normal → /ˈtaɪ.lænd/.
+                        Isso ocorre porque a palavra vem do tailandês, e não segue as regras fonéticas do inglês germânico.
+                        • asthma: o "TH" é silencioso → /ˈæz.mə/ ou /ˈæθ.mə/ (duas variações).
+                        A grafia vem do grego antigo ásthma (respiração ofegante), e o "th" permaneceu apenas como vestígio etimológico.
+                        • clothes: alguns nativos simplificam e dizem /kloʊz/, como se o "TH" sumisse — sinal da força da economia fonética na fala natural.</p>
+                    </div>
+                    <div class="examples">
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="Thailand">▶</button>
+                                Thailand
+                            </div>
+                            <div class="example-portuguese">→ Tailândia (som de T)</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="asthma">▶</button>
+                                asthma
+                            </div>
+                            <div class="example-portuguese">→ asma (TH silencioso)</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="clothes">▶</button>
+                                clothes
+                            </div>
+                            <div class="example-portuguese">→ roupas (TH pode simplificar)</div>
+                        </div>
+                    </div>
+                    <div class="mini-synthesis">🧩 Nem todo "TH" se pronuncia igual: há exceções e evoluções.</div>
+                </div>
+                
+                <!-- Tópico 5 -->
+                <div class="topic-card" id="topic5">
+                    <div class="topic-header">
+                        <div class="topic-number">5</div>
+                        <h2 class="topic-title">O Segredo da Pronúncia Natural</h2>
+                        <div class="topic-icon">🗣️</div>
+                    </div>
+                    <div class="concept">Conceito principal: A chave para pronunciar o "TH" é a posição da língua e o fluxo de ar, não a força.</div>
+                    <div class="analysis">
+                        <p><strong>Análise detalhada:</strong> Praticar frente ao espelho ajuda:
+                        • Mostre um pouquinho da língua entre os dentes.
+                        • Sopre ou vibre, conforme o tipo de "TH".
+                        • Nunca morda a língua nem pressione — o som deve ser leve e contínuo.
+                        Um truque útil:
+                        • Para o surdo /θ/, diga "think" e imagine um leve sussurro.
+                        • Para o sonoro /ð/, diga "this" e sinta o ar tremer na garganta.</p>
+                    </div>
+                    <div class="examples">
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="Think of a thin thread">▶</button>
+                                Think of a thin thread
+                            </div>
+                            <div class="example-portuguese">→ Pense em um fio fino</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="This is the other one">▶</button>
+                                This is the other one
+                            </div>
+                            <div class="example-portuguese">→ Este é o outro</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                <button class="play-btn" data-text="Three thousand thoughts">▶</button>
+                                Three thousand thoughts
+                            </div>
+                            <div class="example-portuguese">→ Três mil pensamentos</div>
+                        </div>
+                    </div>
+                    <div class="mini-synthesis">🗣️ "TH" perfeito = língua relaxada + sopro leve + consciência do som.</div>
+                </div>
+                
+                <!-- Tópico 6 -->
+                <div class="topic-card" id="topic6">
+                    <div class="topic-header">
+                        <div class="topic-number">6</div>
+                        <h2 class="topic-title">Etimologia e Curiosidades Linguísticas</h2>
+                        <div class="topic-icon">📜</div>
+                    </div>
+                    <div class="concept">Conceito principal: O "TH" guarda séculos de história fonética.</div>
+                    <div class="analysis">
+                        <p><strong>Análise detalhada:</strong>
+                        • O símbolo þ (thorn) era usado na escrita medieval inglesa.
+                        • Na imprensa, o thorn desapareceu e foi substituído por "th".
+                        • Curiosamente, em placas antigas lia-se "ye olde tavern" — mas o "ye" vinha do þe, e soava como "the", não como "yi".
+                        O "TH", portanto, é um fósforo aceso que ilumina a origem germânica do inglês e o diferencia radicalmente das línguas latinas.</p>
+                    </div>
+                    <div class="examples">
+                        <div class="example">
+                            <div class="example-english">
+                                þ (thorn)
+                            </div>
+                            <div class="example-portuguese">→ antigo símbolo do som TH</div>
+                        </div>
+                        <div class="example">
+                            <div class="example-english">
+                                "ye olde tavern"
+                            </div>
+                            <div class="example-portuguese">→ na verdade "the old tavern"</div>
+                        </div>
+                    </div>
+                    <div class="mini-synthesis">📜 "TH" é herança do inglês antigo: símbolo de identidade sonora.</div>
+                </div>
+            </div>
+            
+            <!-- Resumo Visual -->
+            <div class="summary" id="summary">
+                <h2>🌟 RESUMO VISUAL – FOLHA DE REVISÃO</h2>
+                
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-icon">🌬️</div>
+                        <h3>TH Surdo /θ/</h3>
+                        <p>think, thank, theory<br>Sem vibração nas cordas vocais</p>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <div class="summary-icon">🔊</div>
+                        <h3>TH Sonoro /ð/</h3>
+                        <p>this, that, those<br>Com vibração nas cordas vocais</p>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <div class="summary-icon">👅</div>
+                        <h3>Posição da Língua</h3>
+                        <p>Entre os dentes, sem pressão</p>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <div class="summary-icon">🧩</div>
+                        <h3>Exceções</h3>
+                        <p>Thailand → som de "T"<br>asthma → "th" silencioso</p>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <div class="summary-icon">📜</div>
+                        <h3>Etimologia</h3>
+                        <p>Antigo símbolo þ (thorn)<br>Som herdado do inglês arcaico</p>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <div class="summary-icon">💡</div>
+                        <h3>Dica Prática</h3>
+                        <p>Toque o pescoço: se vibrar, é /ð/; se não vibrar, é /θ/</p>
+                    </div>
+                </div>
+                
+                <div class="pronunciation-tip">
+                    <h3>🎯 Dica Final de Pronúncia</h3>
+                    <p>Pratique diariamente com palavras simples como "think" e "this". Com o tempo, a posição correta da língua se tornará natural. Lembre-se: a chave é a leveza, não a força!</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Configuração da API de síntese de voz para inglês
+        let speech = null;
+        
+        // Inicializar a síntese de voz
+        function initSpeech() {
+            if ('speechSynthesis' in window) {
+                speech = window.speechSynthesis;
+                return true;
+            } else {
+                console.error("Seu navegador não suporta a API de síntese de voz.");
+                return false;
+            }
+        }
+        
+        // Função para falar o texto em inglês
+        function speakText(text) {
+            if (!speech) return;
+            
+            // Parar qualquer fala em andamento
+            speech.cancel();
+            
+            // Criar uma nova instância de SpeechSynthesisUtterance
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Configurar a voz para inglês americano
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9; // Velocidade um pouco mais lenta para melhor compreensão
+            
+            // Tentar encontrar uma voz feminina americana
+            const voices = speech.getVoices();
+            const americanVoice = voices.find(voice => 
+                voice.lang.includes('en-US') && voice.name.includes('Female')
+            );
+            
+            if (americanVoice) {
+                utterance.voice = americanVoice;
+            }
+            
+            // Iniciar a fala
+            speech.speak(utterance);
+            
+            return utterance;
+        }
+        
+        // Ativar item do menu quando clicado
+        document.querySelectorAll('.menu-item a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                document.querySelectorAll('.menu-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                this.parentElement.classList.add('active');
+            });
+        });
+        
+        // Ativar item do menu baseado na rolagem
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('.topic-card, .header, .summary');
+            const menuItems = document.querySelectorAll('.menu-item');
+            
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - 200)) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            menuItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.querySelector('a').getAttribute('href') === '#' + current) {
+                    item.classList.add('active');
+                }
+            });
+        });
+        
+        // Adicionar funcionalidade aos botões de play
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar a síntese de voz
+            if (!initSpeech()) {
+                alert("Seu navegador não suporta a funcionalidade de áudio. Tente usar Chrome, Firefox ou Edge.");
+                return;
+            }
+            
+            // Adicionar evento de clique a todos os botões de play
+            document.querySelectorAll('.play-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const text = this.getAttribute('data-text');
+                    
+                    // Remover a classe 'playing' de todos os botões
+                    document.querySelectorAll('.play-btn').forEach(btn => {
+                        btn.classList.remove('playing');
+                        btn.innerHTML = '▶';
+                    });
+                    
+                    // Adicionar a classe 'playing' ao botão atual
+                    this.classList.add('playing');
+                    this.innerHTML = '⏸';
+                    
+                    // Falar o texto
+                    const utterance = speakText(text);
+                    
+                    // Quando a fala terminar, restaurar o botão
+                    utterance.onend = function() {
+                        button.classList.remove('playing');
+                        button.innerHTML = '▶';
+                    };
+                    
+                    // Se a fala for interrompida, restaurar o botão
+                    utterance.onerror = function() {
+                        button.classList.remove('playing');
+                        button.innerHTML = '▶';
+                    };
+                });
+            });
+            
+            // Carregar as vozes disponíveis (necessário para alguns navegadores)
+            window.speechSynthesis.onvoiceschanged = function() {
+                initSpeech();
+            };
+        });
+    </script>
+</body>
+</html>
