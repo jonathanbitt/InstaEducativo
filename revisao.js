@@ -382,6 +382,15 @@ async function carregarRevisoesDoDia() {
       .get();
 
     console.log("Revisões encontradas:", snap.size);
+    console.log("=== DEBUG DOS VIDEOIDS ===");
+    snap.forEach(doc => {
+      const data = doc.data();
+      console.log("📄 Documento ID:", doc.id);
+      console.log("🎯 VideoId:", data.videoId);
+      console.log("📝 Título:", data.titulo);
+      console.log("🔍 Todos os campos:", Object.keys(data));
+      console.log("-------------------");
+    });
 
     // SEMPRE garantir que o loading será fechado
     if (snap.empty) {
@@ -409,7 +418,9 @@ async function carregarRevisoesDoDia() {
           tipo: data.tipo || 'revisao'
         };
       })
-      .filter(revisao => revisao.dataRevisao <= hoje)
+     //.filter(revisao => revisao.dataRevisao <= hoje)
+     // Mostra revisões cuja data de revisão é HOJE ou ANTERIOR
+.filter(revisao => revisao.dataRevisao.toDateString() <= new Date().toDateString())
       .sort((a, b) => a.dataRevisao - b.dataRevisao);
 
     document.getElementById("contador-revisoes").textContent = `${revisoesPendentes.length} pendentes`;
@@ -421,6 +432,7 @@ async function carregarRevisoesDoDia() {
       return; // O finally vai fechar o loading
     }
 
+    // ⭐⭐ CORREÇÃO: ADICIONAR ESTAS DUAS LINHAS ⭐⭐
     carregarRevisaoAtual();
     carregarListaRevisoes();
 
