@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico de Vídeos - Shorts Style</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <style>
+    .video-card {
+      transition: all 0.3s ease;
+    }
+    .video-card:hover {
+      transform: translateY(-5px);
+    }
+    .badge-pronuncia {
+      background: linear-gradient(45deg, #8B5CF6, #EC4899);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body class="bg-black text-white min-h-screen">
+  <!-- Cabeçalho -->
+  <div class="p-4 bg-black border-b border-gray-800">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <a href="pronuncia.html" class="text-white hover:text-gray-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </a>
+        <h1 class="text-2xl font-bold">Histórico de Vídeos</h1>
+      </div>
+      <span class="badge-pronuncia" id="contadorVideos">0 vídeos</span>
+    </div>
+    <p class="text-gray-400 mt-2" id="descricaoPeriodo"></p>
+  </div>
+
+  <!-- Filtros de Período -->
+  <div class="p-4 bg-gray-900 border-b border-gray-800 flex flex-wrap gap-3">
+    <button onclick="carregarHistorico(7)" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-bold">Últimos 7 dias</button>
+    <button onclick="carregarHistorico(15)" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-bold">Últimos 15 dias</button>
+    <button onclick="carregarHistorico(30)" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-bold">Últimos 30 dias</button>
+    <button onclick="carregarHistorico(999)" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-bold">Todo o mês</button>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" class="text-center py-8">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+    <p class="text-gray-400 mt-2">Carregando histórico...</p>
+  </div>
+
+  <!-- Mensagem sem vídeos -->
+  <div id="semVideos" class="hidden text-center py-12">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+    <h3 class="text-xl font-bold text-gray-400 mb-2">Nenhum vídeo neste período</h3>
+    <p class="text-gray-500">Tente ampliar o intervalo de dias.</p>
+  </div>
+
+  <!-- Grid de vídeos -->
+  <div id="listaVideos" class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 hidden"></div>
+
+  <!-- Botões Fixos -->
+  <div class="fixed bottom-4 right-4 z-40">
+    <a href="pronuncia.html" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="hidden sm:inline">Assistir</span>
+    </a>
+  </div>
+
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyA9r7AfToG9msI_guh8xY_PJBJXfrF_IPc",
+      authDomain: "instagraneducativo.firebaseapp.com",
+      projectId: "instagraneducativo",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const elementos = {
+      loading: document.getElementById('loading'),
+      semVideos: document.getElementById('semVideos'),
+      listaVideos: document.getElementById('listaVideos'),
+      contador: document.getElementById('contadorVideos'),
+      descricaoPeriodo: document.getElementById('descricaoPeriodo')
+    };
+
+    async function carregarHistorico(dias) {
+      mostrarLoading();
+
+      const hoje = new Date();
+      const inicioPeriodo = new Date();
+      inicioPeriodo.setDate(hoje.getDate() - dias);
+
+      elementos.descricaoPeriodo.textContent = `Período: ${inicioPeriodo.toLocaleDateString('pt-BR')} a ${hoje.toLocaleDateString('pt-BR')}`;
+
+      const snapRevisoes = await db.collection('revisoes').get();
+      const revisoesFiltradas = [];
+      const videoIds = new Set();
+
+      snapRevisoes.forEach(doc => {
+        const r = doc.data();
+        if (!r.dataAgendamento) return;
+        const data = r.dataAgendamento.toDate();
+        if (data >= inicioPeriodo && data <= hoje && r.videoId) {
+          // Evita duplicatas de videoId
+          if (!videoIds.has(r.videoId)) {
+            revisoesFiltradas.push({ id: doc.id, ...r, dataOriginal: data });
+            videoIds.add(r.videoId);
+          }
+        }
+      });
+
+      if (revisoesFiltradas.length === 0) {
+        mostrarSemVideos();
+        return;
+      }
+
+      const videos = [];
+      for (const vid of videoIds) {
+        const snap = await db.collection('videos').where('videoId', '==', vid).get();
+        snap.forEach(d => {
+          const revisao = revisoesFiltradas.find(r => r.videoId === vid);
+          videos.push({
+            id: d.id,
+            ...d.data(),
+            dataAssistido: revisao?.dataOriginal || new Date(),
+            tituloRevisao: revisao?.titulo || d.data().titulo,
+            descricaoRevisao: revisao?.descricao || d.data().descricao
+          });
+        });
+      }
+
+      exibirVideos(videos);
+    }
+
+    function exibirVideos(videos) {
+      if (videos.length === 0) return mostrarSemVideos();
+      elementos.listaVideos.innerHTML = videos.map(v => `
+        <div class="video-card bg-gray-800 rounded-xl overflow-hidden hover:bg-gray-700 transition-all duration-300">
+          <img src="https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg" class="w-full h-48 object-cover cursor-pointer" onclick="abrirVideo('${v.videoId}')">
+          <div class="p-4">
+            <h3 class="font-bold mb-2">${v.tituloRevisao}</h3>
+            <p class="text-gray-400 text-sm mb-3">${v.descricaoRevisao || ''}</p>
+            <button onclick="abrirVideo('${v.videoId}')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-bold">Assistir Novamente</button>
+          </div>
+        </div>
+      `).join('');
+
+      elementos.contador.textContent = `${videos.length} vídeo${videos.length > 1 ? 's' : ''}`;
+      elementos.listaVideos.classList.remove('hidden');
+      elementos.loading.classList.add('hidden');
+      elementos.semVideos.classList.add('hidden');
+    }
+
+    function abrirVideo(videoId) {
+      localStorage.setItem('videoParaAssistir', videoId);
+      window.location.href = 'abrehistorico.html';
+    }
+
+    function mostrarLoading() {
+      elementos.loading.classList.remove('hidden');
+      elementos.semVideos.classList.add('hidden');
+      elementos.listaVideos.classList.add('hidden');
+    }
+
+    function mostrarSemVideos() {
+      elementos.semVideos.classList.remove('hidden');
+      elementos.loading.classList.add('hidden');
+      elementos.listaVideos.classList.add('hidden');
+      elementos.contador.textContent = '0 vídeos';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => carregarHistorico(7));
+  </script>
+</body>
+</html>
