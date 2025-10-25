@@ -375,6 +375,7 @@ function renderizarComentarios(videoId){
 
 
 
+// 🔹 Carregar revisões do dia (ATUALIZADA COM GRADE SEMANAL)
 async function carregarRevisoesDoDia() {
   try {
     mostrarLoading(true, "Carregando revisões...");
@@ -389,24 +390,42 @@ async function carregarRevisoesDoDia() {
       .get();
 
     console.log("Revisões pendentes encontradas:", snap.size);
+    
+    // DEBUG: Mostrar todos os documentos encontrados
+    console.log("=== DEBUG DOS VIDEOIDS ===");
+    snap.forEach(doc => {
+      const data = doc.data();
+      console.log("📄 Documento ID:", doc.id);
+      console.log("🎯 VideoId:", data.videoId);
+      console.log("📝 Título:", data.titulo);
+      console.log("📅 Data Revisão:", data.dataRevisao ? data.dataRevisao.toDate().toLocaleDateString('pt-BR') : "N/A");
+      console.log("✅ Realizada:", data.realizada);
+      console.log("🔍 Todos os campos:", Object.keys(data));
+      console.log("-------------------");
+    });
 
     if (snap.empty) {
       document.getElementById("tituloText").textContent = "Nenhuma revisão pendente";
       document.getElementById("descricao").textContent = "Parabéns! Você não tem revisões pendentes.";
       document.getElementById("listaRevisoesContainer").classList.add("hidden");
+      
+      // ⭐⭐ ATUALIZAÇÃO: Carregar grade semanal mesmo quando não há revisões
+      gerarGradeSemanal();
       return;
     }
 
-    // Transformar dados SEM filtro adicional
+    // Transformar dados SEM filtro adicional - mostrar TODAS as revisões não realizadas
     revisoesPendentes = snap.docs.map(doc => {
       const data = doc.data();
+      const dataRevisao = data.dataRevisao ? data.dataRevisao.toDate() : new Date();
+      
       return {
         id: doc.id,
         videoId: data.videoId,
         titulo: data.titulo,
         descricao: data.descricao || "Sem descrição",
         dataAgendamento: data.dataAgendamento ? data.dataAgendamento.toDate() : new Date(),
-        dataRevisao: data.dataRevisao ? data.dataRevisao.toDate() : new Date(),
+        dataRevisao: dataRevisao,
         intervaloDias: data.intervaloDias || 3,
         realizada: data.realizada || false,
         tipo: data.tipo || 'revisao'
@@ -414,6 +433,7 @@ async function carregarRevisoesDoDia() {
     });
 
     console.log("Revisões após transformação:", revisoesPendentes.length);
+    console.log("📅 Datas das revisões:", revisoesPendentes.map(r => r.dataRevisao.toLocaleDateString('pt-BR')));
     
     // Atualizar interface
     document.getElementById("contador-revisoes").textContent = `${revisoesPendentes.length} pendentes`;
@@ -421,12 +441,30 @@ async function carregarRevisoesDoDia() {
     if (revisoesPendentes.length > 0) {
       carregarRevisaoAtual();
       carregarListaRevisoes();
+    } else {
+      document.getElementById("tituloText").textContent = "Nenhuma revisão pendente";
+      document.getElementById("descricao").textContent = "Parabéns! Você não tem revisões pendentes.";
+      document.getElementById("videoFrame").src = "about:blank";
+      document.getElementById("listaRevisoesContainer").classList.add("hidden");
     }
+
+    // ⭐⭐ ATUALIZAÇÃO: Carregar grade semanal
+    gerarGradeSemanal();
 
   } catch (e) {
     console.error("Erro ao carregar revisões:", e);
+    document.getElementById("tituloText").textContent = "Erro ao carregar revisões";
+    document.getElementById("descricao").innerHTML = "Verifique sua conexão e tente novamente.";
     mostrarFeedback("Erro ao carregar revisões. Verifique sua conexão.", "erro");
+    
+    // Tentar carregar a grade mesmo com erro
+    try {
+      gerarGradeSemanal();
+    } catch (gradeError) {
+      console.error("Erro ao carregar grade:", gradeError);
+    }
   } finally {
+    // ⭐⭐ GARANTIR que o loading sempre fecha
     mostrarLoading(false);
   }
 }
@@ -551,19 +589,11 @@ async function carregarListaRevisoes() {
     
     const thumbnailHTML = await gerarThumbnailInteligente(revisao.videoId, revisao.titulo, true);
     
-
     return `
-      <div class="carrossel-item ${index === revisaoAtualIndex ? 'bg-blue-800' : 'bg-gray-700'} p-3 rounded-lg">
+      <div class="carrossel-item ${index === revisaoAtualIndex ? 'bg-blue-800' : 'bg-gray-700'}">
         ${thumbnailHTML}
-        <!-- Tipo do vídeo -->
-        <div class="text-sm font-bold text-blue-300 mt-2 truncate">
-          ${revisao.tipo || revisao.titulo}
-        </div>
-        <!-- Data -->
-        <div class="text-xs text-gray-300 mt-1">
-          Para: ${revisao.dataRevisao.toLocaleDateString('pt-BR')}${atrasoText}
-        </div>
-        <button class="carrossel-link mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs w-full" data-index="${index}">
+        <div class="text-xs text-gray-300 mt-1">Para: ${revisao.dataRevisao.toLocaleDateString('pt-BR')}${atrasoText}</div>
+        <button class="carrossel-link mt-2" data-index="${index}">
           Selecionar
         </button>
       </div>
@@ -634,6 +664,9 @@ async function marcarComoRevisado() {
 
     document.getElementById("contador-revisoes").textContent = `${revisoesPendentes.length} pendentes`;
 
+    // ⭐⭐ NOVA LINHA: Atualizar grade semanal após marcar como revisado
+    gerarGradeSemanal();
+
   } catch (error) {
     console.error("Erro ao marcar como revisado:", error);
     mostrarFeedback("Erro ao marcar como revisado. Tente novamente.", "erro");
@@ -656,7 +689,7 @@ async function marcarComoRevisado() {
 
 
 
-// 🔹 Agendar nova revisão (CORRIGIDA - campo tipo correto)
+// 🔹 Agendar nova revisão (CORRIGIDO - com finally)
 async function agendarNovaRevisao() {
   if (!revisaoAtualId || revisoesPendentes.length === 0) return;
 
@@ -671,18 +704,14 @@ async function agendarNovaRevisao() {
     const dataRevisao = new Date();
     dataRevisao.setDate(hoje.getDate() + intervalo);
 
-    // ⭐⭐ CORREÇÃO: Usar função inteligente para determinar o tipo
-    const tipoRevisao = determinarTipoRevisao(revisaoAtual);
-
     const novaRevisao = {
       videoId: revisaoAtual.videoId,
       titulo: revisaoAtual.titulo,
-      // ⭐⭐ CORREÇÃO: Usar o tipo correto (não fixo como "pronuncia")
-      tipo: tipoRevisao,
       descricao: revisaoAtual.descricao,
       dataAgendamento: firebase.firestore.Timestamp.fromDate(hoje),
       dataRevisao: firebase.firestore.Timestamp.fromDate(dataRevisao),
       intervaloDias: intervalo,
+      tipo: revisaoAtual.tipo || 'revisao',
       realizada: false
     };
 
@@ -696,40 +725,6 @@ async function agendarNovaRevisao() {
     mostrarLoading(false);
   }
 }
-
-// 🔹 Função para determinar o tipo da revisão de forma inteligente
-function determinarTipoRevisao(revisao) {
-  // Se for conteúdo de verbo/gramática, usar o título como tipo
-  if (revisao.titulo && (
-      revisao.titulo.toLowerCase().includes('verbo') ||
-      revisao.titulo.toLowerCase().includes('verb') ||
-      revisao.titulo.toLowerCase().includes('grammar') ||
-      revisao.titulo.toLowerCase().includes('gramática') ||
-      revisao.titulo.toLowerCase().includes('to be') ||
-      revisao.titulo.toLowerCase().includes('to do')
-  )) {
-    return revisao.titulo;
-  }
-  
-  // Para conteúdos de pronúncia, manter como "pronuncia"
-  if (revisao.titulo && (
-      revisao.titulo.toLowerCase().includes('Pronúncia') ||
-      revisao.titulo.toLowerCase().includes('pronuncia') ||
-      revisao.titulo.toLowerCase().includes('pronunciation') ||
-      revisao.titulo.toLowerCase().includes('speaking')
-  )) {
-    return "Pronúncia";
-  }
-  
-  // Para os demais, usar o tipo existente ou título como fallback
-  return revisao.tipo || revisao.titulo || "conteúdo";
-}
-
-
-
-
-
-
 
 // 🔹 Próxima revisão
 function proximaRevisao() {
@@ -806,27 +801,121 @@ function restaurarBotaoComentario() {
 }
 
 
-
-
-// 🔹 Função para determinar o texto a ser mostrado (tipo ou título)
-function determinarTextoRevisao(revisao) {
-  // Se for um verbo ou conteúdo específico, mostrar o título
-  if (revisao.titulo && (
-      revisao.titulo.toLowerCase().includes('verbo') ||
-      revisao.titulo.toLowerCase().includes('verb') ||
-      revisao.titulo.toLowerCase().includes('to do') ||
-      revisao.titulo.toLowerCase().includes('grammar') ||
-      revisao.titulo.toLowerCase().includes('gramática')
-  )) {
-    return revisao.titulo;
+// 🔹 Função para gerar a grade semanal
+async function gerarGradeSemanal() {
+  try {
+    const gradeContainer = document.getElementById('grade-semanal');
+    const resumoContainer = document.getElementById('resumo-semanal');
+    
+    if (!gradeContainer) return;
+    
+    gradeContainer.innerHTML = '<div class="col-span-7 text-center text-gray-400">Carregando...</div>';
+    
+    // Buscar TODAS as revisões não realizadas
+    const snap = await db.collection('revisoes')
+      .where('realizada', '==', false)
+      .get();
+    
+    const revisoesPendentes = snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        dataRevisao: data.dataRevisao ? data.dataRevisao.toDate() : new Date()
+      };
+    });
+    
+    // Calcular revisões por dia da semana
+    const revisoesPorDia = calcularRevisoesPorDia(revisoesPendentes);
+    
+    // Gerar grade visual
+    gradeContainer.innerHTML = gerarHTMLGrade(revisoesPorDia);
+    
+    // Atualizar resumo
+    atualizarResumoSemanal(resumoContainer, revisoesPorDia);
+    
+  } catch (error) {
+    console.error('Erro ao gerar grade semanal:', error);
+    const gradeContainer = document.getElementById('grade-semanal');
+    if (gradeContainer) {
+      gradeContainer.innerHTML = '<div class="col-span-7 text-center text-red-400">Erro ao carregar</div>';
+    }
   }
-  
-  // Para os demais, usar o tipo (se existir) ou título como fallback
-  return revisao.tipo || revisao.titulo;
 }
 
+// 🔹 Calcular revisões por dia da semana
+function calcularRevisoesPorDia(revisoes) {
+  const diasSemana = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+  const revisoesPorDia = {
+    dom: 0, seg: 0, ter: 0, qua: 0, qui: 0, sex: 0, sab: 0
+  };
+  
+  const hoje = new Date();
+  const inicioSemana = new Date(hoje);
+  inicioSemana.setDate(hoje.getDate() - hoje.getDay()); // Domingo da semana atual
+  
+  revisoes.forEach(revisao => {
+    const dataRevisao = revisao.dataRevisao;
+    const diaSemana = diasSemana[dataRevisao.getDay()];
+    
+    // Só contar revisões desta semana em diante (não mostrar passado distante)
+    if (dataRevisao >= inicioSemana) {
+      revisoesPorDia[diaSemana]++;
+    }
+  });
+  
+  return revisoesPorDia;
+}
 
+// 🔹 Gerar HTML da grade
+function gerarHTMLGrade(revisoesPorDia) {
+  const diasSemana = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+  const nomesCompletos = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  const hoje = new Date().getDay();
+  
+  return diasSemana.map((dia, index) => {
+    const count = revisoesPorDia[dia];
+    const isHoje = index === hoje;
+    const intensidade = calcularIntensidadeCor(count);
+    
+    return `
+      <div class="text-center p-2 rounded-lg border-2 ${isHoje ? 'border-yellow-400 bg-yellow-400 bg-opacity-10' : 'border-zinc-600'} ${intensidade}">
+        <div class="text-white font-bold text-lg">${count}</div>
+        <div class="text-xs ${isHoje ? 'text-yellow-300' : 'text-gray-400'} mt-1">${dia.toUpperCase()}</div>
+      </div>
+    `;
+  }).join('');
+}
 
+// 🔹 Calcular intensidade da cor baseada na quantidade
+function calcularIntensidadeCor(quantidade) {
+  if (quantidade === 0) return 'bg-zinc-900';
+  if (quantidade <= 2) return 'bg-green-900 bg-opacity-50';
+  if (quantidade <= 4) return 'bg-yellow-900 bg-opacity-50';
+  if (quantidade <= 6) return 'bg-orange-900 bg-opacity-50';
+  return 'bg-red-900 bg-opacity-50';
+}
+
+// 🔹 Atualizar resumo semanal
+function atualizarResumoSemanal(container, revisoesPorDia) {
+  if (!container) return;
+  
+  const total = Object.values(revisoesPorDia).reduce((sum, count) => sum + count, 0);
+  const diaMaisCheio = Object.entries(revisoesPorDia).reduce((max, [dia, count]) => 
+    count > max.count ? { dia, count } : max, { dia: '', count: 0 });
+  
+  const nomesDias = {
+    dom: 'Domingo', seg: 'Segunda', ter: 'Terça', qua: 'Quarta',
+    qui: 'Quinta', sex: 'Sexta', sab: 'Sábado'
+  };
+  
+  if (total === 0) {
+    container.innerHTML = '🎉 Nenhuma revisão pendente esta semana!';
+  } else {
+    container.innerHTML = `
+      📊 <strong>${total} revisões</strong> esta semana | 
+      🗓️ <strong>${nomesDias[diaMaisCheio.dia]}</strong> tem mais (${diaMaisCheio.count})
+    `;
+  }
+}
 
 
 
