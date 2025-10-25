@@ -545,6 +545,7 @@ function gerarThumbnailInteligente(videoId, titulo, isCarrossel = false) {
 
 
 // 🔹 Carregar revisão atual
+
 function carregarRevisaoAtual() {
   if (revisoesPendentes.length === 0) return;
 
@@ -554,7 +555,8 @@ function carregarRevisaoAtual() {
   const videoFrame = document.getElementById("videoFrame");
   videoFrame.src = `https://www.youtube.com/embed/${revisao.videoId}?autoplay=1&modestbranding=1&controls=1`;
 
-  document.getElementById("tituloText").textContent = revisao.titulo;
+  // ⭐⭐ ALTERAÇÃO: Usar o campo "tipo" como título
+  document.getElementById("tituloText").textContent = revisao.tipo || revisao.titulo;
   document.getElementById("descricao").textContent = revisao.descricao;
 
   const hoje = new Date();
@@ -573,7 +575,11 @@ function carregarRevisaoAtual() {
   renderizarComentarios(revisao.videoId);
 }
 
+
+
+
 // 🔹 Carregar lista de revisões na sidebar
+// 🔹 Carregar lista de revisões na sidebar (COM THUMBNAILS INTELIGENTES)
 // 🔹 Carregar lista de revisões na sidebar (COM THUMBNAILS INTELIGENTES)
 async function carregarListaRevisoes() {
   const listaEl = document.getElementById("listaRevisoes");
@@ -587,7 +593,7 @@ async function carregarListaRevisoes() {
     const diasAtraso = Math.floor((hoje - revisao.dataRevisao) / (1000 * 60 * 60 * 24));
     const atrasoText = diasAtraso > 0 ? ` (${diasAtraso} dias atrasado)` : '';
     
-    const thumbnailHTML = await gerarThumbnailInteligente(revisao.videoId, revisao.titulo, true);
+    const thumbnailHTML = await gerarThumbnailInteligente(revisao.videoId, revisao.tipo || revisao.titulo, true);
     
     return `
       <div class="carrossel-item ${index === revisaoAtualIndex ? 'bg-blue-800' : 'bg-gray-700'}">
@@ -707,11 +713,12 @@ async function agendarNovaRevisao() {
     const novaRevisao = {
       videoId: revisaoAtual.videoId,
       titulo: revisaoAtual.titulo,
+      // ⭐⭐ ALTERAÇÃO: Incluir o campo tipo também
+      tipo: revisaoAtual.tipo || revisaoAtual.titulo,
       descricao: revisaoAtual.descricao,
       dataAgendamento: firebase.firestore.Timestamp.fromDate(hoje),
       dataRevisao: firebase.firestore.Timestamp.fromDate(dataRevisao),
       intervaloDias: intervalo,
-      tipo: revisaoAtual.tipo || 'revisao',
       realizada: false
     };
 
@@ -725,6 +732,11 @@ async function agendarNovaRevisao() {
     mostrarLoading(false);
   }
 }
+
+
+
+
+
 
 // 🔹 Próxima revisão
 function proximaRevisao() {
