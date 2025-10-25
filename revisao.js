@@ -551,11 +551,19 @@ async function carregarListaRevisoes() {
     
     const thumbnailHTML = await gerarThumbnailInteligente(revisao.videoId, revisao.titulo, true);
     
+
     return `
-      <div class="carrossel-item ${index === revisaoAtualIndex ? 'bg-blue-800' : 'bg-gray-700'}">
+      <div class="carrossel-item ${index === revisaoAtualIndex ? 'bg-blue-800' : 'bg-gray-700'} p-3 rounded-lg">
         ${thumbnailHTML}
-        <div class="text-xs text-gray-300 mt-1">Para: ${revisao.dataRevisao.toLocaleDateString('pt-BR')}${atrasoText}</div>
-        <button class="carrossel-link mt-2" data-index="${index}">
+        <!-- Tipo do vídeo -->
+        <div class="text-sm font-bold text-blue-300 mt-2 truncate">
+          ${revisao.tipo || revisao.titulo}
+        </div>
+        <!-- Data -->
+        <div class="text-xs text-gray-300 mt-1">
+          Para: ${revisao.dataRevisao.toLocaleDateString('pt-BR')}${atrasoText}
+        </div>
+        <button class="carrossel-link mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs w-full" data-index="${index}">
           Selecionar
         </button>
       </div>
@@ -648,7 +656,7 @@ async function marcarComoRevisado() {
 
 
 
-// 🔹 Agendar nova revisão (CORRIGIDO - com finally)
+// 🔹 Agendar nova revisão (CORRIGIDA - campo tipo correto)
 async function agendarNovaRevisao() {
   if (!revisaoAtualId || revisoesPendentes.length === 0) return;
 
@@ -663,14 +671,18 @@ async function agendarNovaRevisao() {
     const dataRevisao = new Date();
     dataRevisao.setDate(hoje.getDate() + intervalo);
 
+    // ⭐⭐ CORREÇÃO: Usar função inteligente para determinar o tipo
+    const tipoRevisao = determinarTipoRevisao(revisaoAtual);
+
     const novaRevisao = {
       videoId: revisaoAtual.videoId,
       titulo: revisaoAtual.titulo,
+      // ⭐⭐ CORREÇÃO: Usar o tipo correto (não fixo como "pronuncia")
+      tipo: tipoRevisao,
       descricao: revisaoAtual.descricao,
       dataAgendamento: firebase.firestore.Timestamp.fromDate(hoje),
       dataRevisao: firebase.firestore.Timestamp.fromDate(dataRevisao),
       intervaloDias: intervalo,
-      tipo: revisaoAtual.tipo || 'revisao',
       realizada: false
     };
 
@@ -684,6 +696,40 @@ async function agendarNovaRevisao() {
     mostrarLoading(false);
   }
 }
+
+// 🔹 Função para determinar o tipo da revisão de forma inteligente
+function determinarTipoRevisao(revisao) {
+  // Se for conteúdo de verbo/gramática, usar o título como tipo
+  if (revisao.titulo && (
+      revisao.titulo.toLowerCase().includes('verbo') ||
+      revisao.titulo.toLowerCase().includes('verb') ||
+      revisao.titulo.toLowerCase().includes('grammar') ||
+      revisao.titulo.toLowerCase().includes('gramática') ||
+      revisao.titulo.toLowerCase().includes('to be') ||
+      revisao.titulo.toLowerCase().includes('to do')
+  )) {
+    return revisao.titulo;
+  }
+  
+  // Para conteúdos de pronúncia, manter como "pronuncia"
+  if (revisao.titulo && (
+      revisao.titulo.toLowerCase().includes('Pronúncia') ||
+      revisao.titulo.toLowerCase().includes('pronuncia') ||
+      revisao.titulo.toLowerCase().includes('pronunciation') ||
+      revisao.titulo.toLowerCase().includes('speaking')
+  )) {
+    return "Pronúncia";
+  }
+  
+  // Para os demais, usar o tipo existente ou título como fallback
+  return revisao.tipo || revisao.titulo || "conteúdo";
+}
+
+
+
+
+
+
 
 // 🔹 Próxima revisão
 function proximaRevisao() {
@@ -758,6 +804,31 @@ function restaurarBotaoComentario() {
     return false;
   };
 }
+
+
+
+
+// 🔹 Função para determinar o texto a ser mostrado (tipo ou título)
+function determinarTextoRevisao(revisao) {
+  // Se for um verbo ou conteúdo específico, mostrar o título
+  if (revisao.titulo && (
+      revisao.titulo.toLowerCase().includes('verbo') ||
+      revisao.titulo.toLowerCase().includes('verb') ||
+      revisao.titulo.toLowerCase().includes('to do') ||
+      revisao.titulo.toLowerCase().includes('grammar') ||
+      revisao.titulo.toLowerCase().includes('gramática')
+  )) {
+    return revisao.titulo;
+  }
+  
+  // Para os demais, usar o tipo (se existir) ou título como fallback
+  return revisao.tipo || revisao.titulo;
+}
+
+
+
+
+
 
 // Inicializar a página
 document.addEventListener('DOMContentLoaded', async function() {
