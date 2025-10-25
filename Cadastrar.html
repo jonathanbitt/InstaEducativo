@@ -113,10 +113,21 @@
     console.log("✅ Tags carregadas em memória:", Array.from(tagsSet));
   }
 
+  // 🔹 Função para limpar e normalizar tags
+  function normalizarTags(tagsString) {
+    // Remove espaços após os pontos e trim em cada parte
+    return tagsString
+      .split('.')
+      .map(part => part.trim()) // Remove espaços no início e fim de cada parte
+      .filter(part => part !== '') // Remove partes vazias
+      .join('.');
+  }
+
   // 🔹 Mostrar sugestões instantâneas
   function mostrarSugestoes() {
     const value = tagsInput.value;
-    const parts = value.split(".");
+    const normalizedValue = normalizarTags(value);
+    const parts = normalizedValue.split(".");
     const current = parts[parts.length - 1].trim().toLowerCase();
 
     if (!current) { suggestionsDiv.style.display = "none"; return; }
@@ -139,8 +150,24 @@
     suggestionsDiv.style.display = "block";
   }
 
-  tagsInput.addEventListener("input", mostrarSugestoes);
-  tagsInput.addEventListener("blur", () => { setTimeout(()=>{ suggestionsDiv.style.display="none"; }, 150); });
+  // 🔹 Processar input de tags em tempo real (opcional - para melhor UX)
+  tagsInput.addEventListener("input", function() {
+    // Normaliza o valor em tempo real (remove espaços após pontos)
+    const cursorPosition = this.selectionStart;
+    const normalizedValue = normalizarTags(this.value);
+    
+    if (this.value !== normalizedValue) {
+      this.value = normalizedValue;
+      // Mantém a posição do cursor
+      this.setSelectionRange(cursorPosition, cursorPosition);
+    }
+    
+    mostrarSugestoes();
+  });
+
+  tagsInput.addEventListener("blur", () => { 
+    setTimeout(() => { suggestionsDiv.style.display = "none"; }, 150); 
+  });
 
   // 🔹 Salvar vídeo
   form.addEventListener("submit", async (e) => {
@@ -150,7 +177,11 @@
     const titulo = form.titulo.value;
     const videoId = form.videoId.value;
     const descricao = form.descricao.value;
-    const tags = form.tags.value.split(".").map(t=>t.trim()).filter(t=>t!=="");
+    
+    // Normaliza as tags antes de processar
+    const tagsNormalizadas = normalizarTags(form.tags.value);
+    const tags = tagsNormalizadas.split(".").map(t => t.trim()).filter(t => t !== "");
+    
     const autor = form.autor.value;
     const numeroVideo = form.numeroVideo.value;
     const especial = form.especial.checked;
@@ -158,7 +189,13 @@
     try {
       // Salvar vídeo
       await db.collection("videos").add({
-        titulo, videoId, descricao, tags, autor, numeroVideo, especial,
+        titulo, 
+        videoId, 
+        descricao, 
+        tags, 
+        autor, 
+        numeroVideo, 
+        especial,
         data: firebase.firestore.FieldValue.serverTimestamp()
       });
 
