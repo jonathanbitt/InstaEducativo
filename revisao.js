@@ -371,81 +371,70 @@ function renderizarComentarios(videoId){
   carregarComentarios(videoId);
 }
 
-// 🔹 Carregar revisões do dia (CORRIGIDO - garantindo que loading sempre fecha)
+
+
+
+
 async function carregarRevisoesDoDia() {
   try {
     mostrarLoading(true, "Carregando revisões...");
     await ensureAuth();
 
+    const hoje = new Date();
+    
+    // Buscar TODAS as revisões não realizadas (independente da data)
     const snap = await db.collection('revisoes')
       .where('realizada', '==', false)
+      .orderBy('dataRevisao', 'asc') // Ordenar no Firebase
       .get();
 
-    console.log("Revisões encontradas:", snap.size);
-    console.log("=== DEBUG DOS VIDEOIDS ===");
-    snap.forEach(doc => {
-      const data = doc.data();
-      console.log("📄 Documento ID:", doc.id);
-      console.log("🎯 VideoId:", data.videoId);
-      console.log("📝 Título:", data.titulo);
-      console.log("🔍 Todos os campos:", Object.keys(data));
-      console.log("-------------------");
-    });
+    console.log("Revisões pendentes encontradas:", snap.size);
 
-    // SEMPRE garantir que o loading será fechado
     if (snap.empty) {
-      document.getElementById("tituloText").textContent = "Nenhuma revisão para hoje";
+      document.getElementById("tituloText").textContent = "Nenhuma revisão pendente";
       document.getElementById("descricao").textContent = "Parabéns! Você não tem revisões pendentes.";
       document.getElementById("listaRevisoesContainer").classList.add("hidden");
-      return; // O finally vai fechar o loading
+      return;
     }
 
-    const hoje = new Date();
-    revisoesPendentes = snap.docs
-      .map(doc => {
-        const data = doc.data();
-        const dataRevisao = data.dataRevisao ? data.dataRevisao.toDate() : new Date();
-        
-        return {
-          id: doc.id,
-          videoId: data.videoId,
-          titulo: data.titulo,
-          descricao: data.descricao || "Sem descrição",
-          dataAgendamento: data.dataAgendamento ? data.dataAgendamento.toDate() : new Date(),
-          dataRevisao: dataRevisao,
-          intervaloDias: data.intervaloDias || 3,
-          realizada: data.realizada || false,
-          tipo: data.tipo || 'revisao'
-        };
-      })
-     //.filter(revisao => revisao.dataRevisao <= hoje)
-     // Mostra revisões cuja data de revisão é HOJE ou ANTERIOR
-.filter(revisao => revisao.dataRevisao.toDateString() <= new Date().toDateString())
-      .sort((a, b) => a.dataRevisao - b.dataRevisao);
+    // Transformar dados SEM filtro adicional
+    revisoesPendentes = snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        videoId: data.videoId,
+        titulo: data.titulo,
+        descricao: data.descricao || "Sem descrição",
+        dataAgendamento: data.dataAgendamento ? data.dataAgendamento.toDate() : new Date(),
+        dataRevisao: data.dataRevisao ? data.dataRevisao.toDate() : new Date(),
+        intervaloDias: data.intervaloDias || 3,
+        realizada: data.realizada || false,
+        tipo: data.tipo || 'revisao'
+      };
+    });
 
+    console.log("Revisões após transformação:", revisoesPendentes.length);
+    
+    // Atualizar interface
     document.getElementById("contador-revisoes").textContent = `${revisoesPendentes.length} pendentes`;
-
-    if (revisoesPendentes.length === 0) {
-      document.getElementById("tituloText").textContent = "Nenhuma revisão pendente";
-      document.getElementById("descricao").textContent = "Não há revisões pendentes para hoje.";
-      document.getElementById("listaRevisoesContainer").classList.add("hidden");
-      return; // O finally vai fechar o loading
+    
+    if (revisoesPendentes.length > 0) {
+      carregarRevisaoAtual();
+      carregarListaRevisoes();
     }
-
-    // ⭐⭐ CORREÇÃO: ADICIONAR ESTAS DUAS LINHAS ⭐⭐
-    carregarRevisaoAtual();
-    carregarListaRevisoes();
 
   } catch (e) {
     console.error("Erro ao carregar revisões:", e);
-    document.getElementById("tituloText").textContent = "Erro ao carregar revisões";
-    document.getElementById("descricao").innerHTML = "Verifique sua conexão e tente novamente.";
     mostrarFeedback("Erro ao carregar revisões. Verifique sua conexão.", "erro");
   } finally {
-    // ⭐⭐ GARANTIR que o loading sempre fecha, mesmo com erro ⭐⭐
     mostrarLoading(false);
   }
 }
+
+
+
+
+
 
 
 
