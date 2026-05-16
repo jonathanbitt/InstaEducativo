@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
+<title>StudyThread — Aprofundamento</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+
+<style>
+/* ===== CSS COMPLETO (INALTERADO) ===== */
+:root {
+  --ink:#1a1410;--paper:#f9f6f0;--aged:#f0ebe0;--sepia:#c8b89a;--rust:#8b3a2a;--gold:#c4952a;--sage:#4a6741;--slate:#3d4f5c;--ghost:#7a7060;--margin:#d4c9b0;
+  --font-d:'Playfair Display',Georgia,serif;
+  --font-b:'Crimson Pro','Times New Roman',serif;
+  --font-m:'DM Mono','Courier New',monospace;
+  --r:4px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--font-b);font-size:18px;line-height:1.75;color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;}
+
+#layout{
+  display:grid;
+  grid-template-columns:1fr;
+  grid-template-rows:56px 340px 1fr;
+  height:100vh;
+}
+
+#top-panels{
+  grid-row:2;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  border-bottom:2px solid var(--gold);
+  background:var(--paper);
+  min-height:0;
+  overflow:hidden;
+}
+
+#post-origem-panel{
+  background:var(--aged);
+  overflow-y:auto;
+  border-right:1px solid var(--margin);
+}
+
+#thread-panel{
+  background:var(--paper);
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+}
+
+#topbar{
+  grid-column:1/-1;
+  background:var(--ink);border-bottom:2px solid var(--gold);
+  display:flex;align-items:center;gap:16px;padding:0 24px;
+  position:sticky;top:0;z-index:30;
+}
+.topbar-back{
+  background:transparent;border:1px solid rgba(255,255,255,.15);
+  color:var(--sepia);font-family:var(--font-m);font-size:.7rem;
+  padding:5px 12px;border-radius:var(--r);cursor:pointer;
+  transition:all .15s;text-transform:uppercase;letter-spacing:.08em;
+}
+.topbar-back:hover{background:rgba(196,149,42,.2);color:var(--gold);}
+.topbar-title{font-family:var(--font-d);font-size:1.1rem;color:var(--paper);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topbar-title span{color:var(--gold);font-style:italic;}
+.topbar-badge{font-family:var(--font-m);font-size:.6rem;padding:2px 8px;border-radius:10px;background:rgba(196,149,42,.15);color:var(--gold);border:1px solid rgba(196,149,42,.25);white-space:nowrap;}
+.topbar-actions{display:flex;gap:8px;}
+.btn{font-family:var(--font-m);font-size:.68rem;letter-spacing:.07em;padding:6px 13px;border-radius:var(--r);border:none;cursor:pointer;transition:all .15s;text-transform:uppercase;}
+.btn-gold{background:var(--gold);color:var(--ink);}.btn-gold:hover{background:#b5882a;}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.15);color:var(--sepia);}.btn-ghost:hover{background:rgba(255,255,255,.08);color:var(--paper);}
+.btn-sage{background:var(--sage);color:var(--paper);}.btn-sage:hover{background:#3d5835;}
+
+#editor-col{
+  grid-row:3;
+  overflow-y:auto;
+  background:var(--paper);
+  background-image:repeating-linear-gradient(transparent,transparent 31px,rgba(196,149,42,.03) 31px,rgba(196,149,42,.03) 32px);
+  scroll-behavior:smooth;
+}
+
+#post-origem{
+  padding:32px 36px;
+  position:relative;
+}
+.origem-label{font-family:var(--font-m);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ghost);margin-bottom:1rem;font-weight:400;}
+.origem-conteudo{font-family:var(--font-d);font-size:1.4rem;line-height:1.6;color:var(--ink);font-style:italic;margin-bottom:1.25rem;max-width:70ch;font-weight:400;}
+.origem-meta{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-top:.5rem;}
+.origem-autor{display:flex;align-items:center;gap:.5rem;font-family:var(--font-m);font-size:.75rem;color:var(--ghost);}
+.origem-dot{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;}
+.origem-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.origem-tag{font-family:var(--font-m);font-size:.58rem;padding:1px 7px;border-radius:10px;background:rgba(196,149,42,.1);color:var(--gold);border:1px solid rgba(196,149,42,.2);}
+
+.thread-header{
+  font-family:var(--font-d);
+  font-size:.9rem;
+  color:var(--sepia);
+  font-style:italic;
+  margin:16px 18px 8px 18px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--margin);
+}
+.thread-content{
+  flex:1;
+  overflow-y:auto;
+  padding:14px;
+  max-width:75ch;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+#notion-editor{
+  max-width:85ch;
+  margin:0 auto;
+  padding:48px 32px 120px;
+  min-height:100%;
+}
+
+#toolbar{
+  display:flex;gap:4px;align-items:center;
+  background:var(--ink);
+  border-radius:8px;
+  padding:6px 8px;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+  position:fixed;
+  z-index:100;
+  opacity:0;pointer-events:none;
+  transition:opacity .15s;
+  flex-wrap:wrap;
+  max-width:520px;
+}
+#toolbar.visible{opacity:1;pointer-events:all;}
+.tb-btn{
+  background:transparent;border:none;color:var(--sepia);
+  font-size:.8rem;padding:4px 8px;border-radius:3px;
+  cursor:pointer;font-family:var(--font-m);transition:all .12s;
+  white-space:nowrap;
+}
+.tb-btn:hover{background:rgba(255,255,255,.1);color:var(--gold);}
+.tb-sep{width:1px;height:16px;background:rgba(255,255,255,.15);margin:0 2px;}
+
+.notion-block{
+  position:relative;
+  margin:2px 0;
+  border-radius:4px;
+  transition:background .1s;
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+}
+.notion-block:hover{background:rgba(196,149,42,.04);}
+.notion-block:hover .block-handle{opacity:1;}
+
+.block-handle{
+  opacity:0;
+  cursor:grab;
+  color:var(--margin);
+  font-size:.85rem;
+  padding:4px 2px;
+  margin-top:2px;
+  flex-shrink:0;
+  transition:opacity .15s;
+  width:20px;
+  text-align:center;
+  user-select:none;
+}
+.block-handle:active{cursor:grabbing;}
+
+.block-content{flex:1;min-width:0;outline:none;max-width:100%;}
+
+.block-p{font-family:var(--font-b);font-size:1.05rem;line-height:1.8;color:var(--ink);padding:.5rem 0;margin-bottom:1rem;}
+.block-p:empty::before{content:attr(data-ph);color:var(--margin);pointer-events:none;}
+.block-p + .block-p{margin-top:.5rem;}
+
+.block-h1{font-family:var(--font-d);font-size:2.2rem;font-weight:700;line-height:1.25;color:var(--ink);padding:1.5rem 0 .75rem;margin:1rem 0 1rem 0;border-bottom:2px solid var(--margin);letter-spacing:-.01em;}
+.block-h1:empty::before{content:'Título'; color:var(--margin);pointer-events:none;}
+
+.block-h2{font-family:var(--font-d);font-size:1.6rem;font-weight:700;line-height:1.3;color:var(--ink);padding:1.25rem 0 .5rem;margin:1.5rem 0 .75rem 0;letter-spacing:-.005em;}
+.block-h2:empty::before{content:'Subtítulo';color:var(--margin);pointer-events:none;}
+
+.block-h3{font-family:var(--font-d);font-size:1.25rem;font-weight:600;line-height:1.4;color:var(--ghost);padding:1rem 0 .25rem;margin:1rem 0 .5rem 0;font-style:italic;}
+.block-h3:empty::before{content:'Seção';color:var(--margin);pointer-events:none;}
+
+.block-bullet{font-family:var(--font-b);font-size:1rem;line-height:1.75;color:var(--ink);padding:.25rem 0 .25rem 1.75rem;margin:.25rem 0;position:relative;}
+.block-bullet::before{content:'•';position:absolute;left:4px;color:var(--gold);}
+.block-bullet:empty::before{content:'• Item da lista';left:4px;color:var(--margin);}
+
+.block-num{font-family:var(--font-b);font-size:1rem;line-height:1.75;color:var(--ink);padding:.25rem 0 .25rem 1.75rem;margin:.25rem 0;position:relative;}
+.block-num:empty::before{content:'Item numerado';color:var(--margin);}
+
+.block-quote{
+  font-family:var(--font-d);font-size:1.15rem;font-style:italic;
+  line-height:1.7;color:var(--slate);
+  border-left:4px solid var(--gold);
+  padding:1rem 1.5rem;margin:1.5rem 0;
+  background:rgba(196,149,42,.04);border-radius:0 8px 8px 0;
+}
+.block-quote:empty::before{content:'"Citação ou destaque…"';color:var(--margin);}
+
+.block-callout{
+  background:rgba(196,149,42,.06);border:1px solid rgba(196,149,42,.2);
+  border-radius:8px;padding:1rem 1.25rem;margin:1.25rem 0;
+  font-family:var(--font-b);font-size:.98rem;line-height:1.7;
+}
+.block-callout:empty::before{content:'💡 Nota importante…';color:var(--margin);}
+
+.block-divider{border:none;border-top:2px dashed var(--margin);margin:1.5rem 0;pointer-events:none;}
+
+.block-code{
+  font-family:var(--font-m);font-size:.85rem;line-height:1.6;
+  background:#1a1410;color:#c0b080;
+  padding:1.25rem 1.5rem;border-radius:8px;margin:1.25rem 0;
+  overflow-x:auto;white-space:pre-wrap;word-break:break-word;
+}
+.block-code:empty::before{content:'// Código…';color:#5a4a30;}
+
+.block-youtube{margin:1rem 0;}
+.youtube-input-wrap{display:flex;gap:8px;align-items:center;}
+.youtube-input-wrap input{
+  flex:1;background:var(--aged);border:1px solid var(--margin);
+  border-radius:var(--r);padding:8px 12px;
+  font-family:var(--font-m);font-size:.78rem;color:var(--ink);outline:none;
+  transition:border-color .2s;
+}
+.youtube-input-wrap input:focus{border-color:var(--gold);}
+.youtube-embed{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:6px;background:#1a1410;margin-top:8px;}
+.youtube-embed iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:6px;}
+.youtube-label{font-family:var(--font-m);font-size:.62rem;color:var(--ghost);margin-bottom:6px;letter-spacing:.1em;text-transform:uppercase;}
+
+.block-link{
+  border:1px solid var(--margin);border-radius:6px;
+  padding:12px 16px;margin:1rem 0;
+  display:flex;align-items:center;gap:10px;
+  background:var(--aged);text-decoration:none;
+  transition:border-color .2s;
+}
+.block-link:hover{border-color:var(--gold);}
+.link-icon{font-size:1.2rem;flex-shrink:0;}
+.link-info{flex:1;min-width:0;}
+.link-url{font-family:var(--font-m);font-size:.7rem;color:var(--ghost);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.link-title{font-family:var(--font-b);font-size:.95rem;color:var(--ink);margin-bottom:2px;}
+
+.block-image{margin:1rem 0;text-align:center;}
+.block-image img{max-width:100%;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,.1);}
+.image-caption{font-family:var(--font-m);font-size:.65rem;color:var(--ghost);margin-top:6px;font-style:italic;}
+
+#slash-menu{
+  position:fixed;z-index:200;
+  background:var(--paper);
+  border:1px solid var(--margin);
+  border-radius:8px;
+  box-shadow:0 8px 30px rgba(0,0,0,.15);
+  min-width:240px;
+  max-height:320px;
+  overflow-y:auto;
+  display:none;
+}
+#slash-menu.open{display:block;}
+.slash-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 14px;cursor:pointer;
+  font-family:var(--font-b);font-size:.9rem;color:var(--ink);
+  transition:background .1s;
+}
+.slash-item:hover,.slash-item.active{background:rgba(196,149,42,.08);}
+.slash-icon{font-size:1rem;width:24px;text-align:center;flex-shrink:0;}
+.slash-label{flex:1;}
+.slash-hint{font-family:var(--font-m);font-size:.62rem;color:var(--ghost);}
+
+.notion-block.selected{background:rgba(196,149,42,.1);}
+
+#status-bar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:var(--aged);
+  border-top:1px solid var(--margin);
+  padding:6px 48px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  font-family:var(--font-m);
+  font-size:.62rem;
+  color:var(--ghost);
+  z-index:20;
+  pointer-events:none;
+}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--sage);}
+.status-dot.saving{background:var(--gold);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--aged);}
+::-webkit-scrollbar-thumb{background:var(--margin);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--gold);}
+
+.tipo-filosofia{background:#ede8f5;color:#4a2d7a;}
+.tipo-fisica{background:#e8f4ff;color:#1a3a6a;}
+.tipo-matematica{background:#e8f0f5;color:#1a4a7a;}
+.tipo-idioma{background:#f5ede8;color:#7a3a1a;}
+.tipo-logica{background:#e8f5ed;color:#1a7a4a;}
+.tipo-ciencia{background:#f5f0e8;color:#7a5a1a;}
+.tipo-historia{background:#ede8e8;color:#7a1a1a;}
+.tipo-literatura{background:#f0ede8;color:#5a3a1a;}
+.tipo-outro{background:#e8e8e8;color:#4a4a4a;}
+
+.link-block-input{display:flex;gap:8px;align-items:center;}
+.link-block-input input{flex:1;background:var(--aged);border:1px solid var(--margin);border-radius:var(--r);padding:8px 12px;font-family:var(--font-m);font-size:.78rem;color:var(--ink);outline:none;}
+.link-block-input input:focus{border-color:var(--gold);}
+
+.notion-block.dragging{opacity:.4;}
+.notion-block.drag-over{border-top:2px solid var(--gold);}
+
+/* ===== SISTEMA DE NOTAS HIERÁRQUICAS ===== */
+.hierarchical-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.hierarchical-note {
+  position: relative;
+  margin-bottom: 0px;
+}
+
+.note-tree-wrapper {
+  position: relative;
+}
+
+.note-tree-wrapper::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, 
+    transparent 0%,
+    var(--margin) 8px,
+    var(--margin) calc(100% - 8px),
+    transparent 100%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.note-level-0 { margin-left: 0px; }
+.note-level-1 { margin-left: 24px; position: relative; }
+.note-level-2 { margin-left: 40px; position: relative; }
+.note-level-3 { margin-left: 52px; position: relative; }
+.note-level-4 { margin-left: 60px; position: relative; }
+.note-level-5 { margin-left: 64px; position: relative; }
+.note-level-6,
+.note-level-7,
+.note-level-8,
+.note-level-9,
+.note-level-10 { margin-left: 68px; }
+
+.note-level-1 .note-tree-wrapper::before,
+.note-level-2 .note-tree-wrapper::before,
+.note-level-3 .note-tree-wrapper::before,
+.note-level-4 .note-tree-wrapper::before,
+.note-level-5 .note-tree-wrapper::before,
+.note-level-6 .note-tree-wrapper::before,
+.note-level-7 .note-tree-wrapper::before,
+.note-level-8 .note-tree-wrapper::before,
+.note-level-9 .note-tree-wrapper::before,
+.note-level-10 .note-tree-wrapper::before {
+  opacity: 0.4;
+}
+
+.note-tree-wrapper::after {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 24px;
+  width: 16px;
+  height: 2px;
+  background: var(--margin);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.note-level-1 .note-tree-wrapper::after,
+.note-level-2 .note-tree-wrapper::after,
+.note-level-3 .note-tree-wrapper::after,
+.note-level-4 .note-tree-wrapper::after,
+.note-level-5 .note-tree-wrapper::after,
+.note-level-6 .note-tree-wrapper::after,
+.note-level-7 .note-tree-wrapper::after,
+.note-level-8 .note-tree-wrapper::after,
+.note-level-9 .note-tree-wrapper::after,
+.note-level-10 .note-tree-wrapper::after {
+  opacity: 0.3;
+}
+
+.note-card {
+  background: #252018;
+  border: 1px solid #3d3020;
+  border-radius: 6px;
+  padding: 12px 14px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.note-card:hover {
+  border-color: #5a4a30;
+  background: #2a2218;
+  transform: translateX(2px);
+}
+
+.note-card.selected {
+  background: rgba(196, 149, 42, 0.08);
+  border-left: 3px solid var(--gold);
+  border-left-width: 3px;
+  padding-left: 12px;
+}
+
+.note-content {
+  font-family: var(--font-b);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #bfb090;
+  word-break: break-word;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.note-content > div {
+  margin-bottom: 0.75rem;
+}
+
+.note-content > div:last-child {
+  margin-bottom: 0;
+}
+
+.note-content a {
+  color: #c4952a;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(196, 149, 42, 0.3);
+  transition: border-color 0.2s ease;
+}
+
+.note-content a:hover {
+  border-bottom-color: var(--gold);
+}
+
+.note-embed {
+  margin: 8px 0 4px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.note-embed iframe {
+  width: 100%;
+  border: none;
+  border-radius: 4px;
+}
+
+.note-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #3d3020;
+  font-family: var(--font-m);
+  font-size: 0.6rem;
+  color: #4a4030;
+  flex-wrap: wrap;
+}
+
+.note-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.note-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.note-btn {
+  background: transparent;
+  border: 1px solid #3d3020;
+  border-radius: 4px;
+  color: #5a4d3a;
+  font-family: var(--font-m);
+  font-size: 0.6rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.note-btn:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.note-btn.delete:hover {
+  color: #bf6a6a;
+  border-color: #bf6a6a;
+}
+
+.note-btn.collapse {
+  font-family: monospace;
+  font-size: 0.7rem;
+}
+
+.replies-region {
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.replies-region.expanded {
+  max-height: 5000px;
+  opacity: 1;
+}
+
+.reply-form,
+.edit-form {
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reply-form {
+  margin-top: 8px;
+  margin-left: 0px;
+}
+
+.reply-form textarea {
+  width: 100%;
+  min-height: 70px;
+  background: #1e1810;
+  border: 1px solid #3d3020;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: var(--font-b);
+  font-size: 0.85rem;
+  color: #bfb090;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.reply-form textarea:focus {
+  border-color: var(--gold);
+}
+
+.reply-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.reply-form-actions button {
+  padding: 5px 12px;
+  font-family: var(--font-m);
+  font-size: 0.65rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.reply-submit {
+  background: var(--gold);
+  color: var(--ink);
+  border: none;
+}
+
+.reply-submit:hover {
+  background: #b5882a;
+}
+
+.reply-cancel {
+  background: transparent;
+  border: 1px solid #3d3020;
+  color: #7a6a50;
+}
+
+.reply-cancel:hover {
+  border-color: #5a4a30;
+  color: #bfb090;
+}
+
+.edit-form {
+  margin-top: 8px;
+}
+
+.edit-form textarea {
+  width: 100%;
+  min-height: 70px;
+  background: #1e1810;
+  border: 1px solid #3d3020;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: var(--font-b);
+  font-size: 0.85rem;
+  color: #bfb090;
+  resize: vertical;
+  outline: none;
+}
+
+.edit-form textarea:focus {
+  border-color: var(--gold);
+}
+
+.edit-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.edit-submit {
+  background: var(--sage);
+  color: var(--paper);
+  border: none;
+}
+
+.edit-cancel {
+  background: transparent;
+  border: 1px solid #3d3020;
+  color: #7a6a50;
+}
+
+.notes-loading {
+  text-align: center;
+  padding: 20px;
+  color: var(--ghost);
+  font-family: var(--font-m);
+  font-size: 0.75rem;
+}
+
+.notes-empty {
+  text-align: center;
+  padding: 30px 20px;
+  color: #4a4030;
+  font-family: var(--font-d);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 900px){
+  html,body{
+    overflow:auto;
+    height:auto;
+  }
+  #layout{
+    display:flex;
+    flex-direction:column;
+    height:auto;
+    min-height:100vh;
+  }
+  #topbar{
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  #top-panels{
+    display:flex;
+    flex-direction:column;
+    min-height:auto;
+    overflow:visible;
+  }
+  #post-origem-panel{
+    border-right:none;
+    border-bottom:1px solid var(--margin);
+    max-height:none;
+  }
+  #thread-panel{
+    max-height:none;
+  }
+  #editor-col{
+    overflow:visible;
+  }
+  #notion-editor{
+    padding:32px 20px 100px;
+    max-width:100%;
+  }
+  #status-bar{
+    right:0;
+    padding:6px 14px;
+    font-size:.58rem;
+  }
+  .topbar-title{
+    font-size:.9rem;
+  }
+  .topbar-actions{
+    display:none;
+  }
+  .origem-conteudo{
+    font-size:1.2rem;
+    line-height:1.5;
+  }
+  #toolbar{
+    max-width:95vw;
+  }
+  
+  body {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  
+  .block-h1 {
+    font-size: 1.8rem;
+    padding: 1rem 0 0.5rem;
+  }
+  
+  .block-h2 {
+    font-size: 1.4rem;
+  }
+  
+  .block-h3 {
+    font-size: 1.15rem;
+  }
+  
+  .block-p {
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+  
+  .block-quote {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  .note-level-1 { margin-left: 12px; }
+  .note-level-2 { margin-left: 20px; }
+  .note-level-3 { margin-left: 24px; }
+  .note-level-4 { margin-left: 28px; }
+  .note-level-5 { margin-left: 30px; }
+  .note-level-6,
+  .note-level-7,
+  .note-level-8,
+  .note-level-9,
+  .note-level-10 { margin-left: 32px; }
+  
+  .note-level-1 .note-tree-wrapper::before,
+  .note-level-2 .note-tree-wrapper::before,
+  .note-level-3 .note-tree-wrapper::before,
+  .note-level-4 .note-tree-wrapper::before,
+  .note-level-5 .note-tree-wrapper::before,
+  .note-level-6 .note-tree-wrapper::before,
+  .note-level-7 .note-tree-wrapper::before,
+  .note-level-8 .note-tree-wrapper::before,
+  .note-level-9 .note-tree-wrapper::before,
+  .note-level-10 .note-tree-wrapper::before {
+    left: -10px;
+    opacity: 0.25;
+  }
+  
+  .note-level-1 .note-tree-wrapper::after,
+  .note-level-2 .note-tree-wrapper::after,
+  .note-level-3 .note-tree-wrapper::after,
+  .note-level-4 .note-tree-wrapper::after,
+  .note-level-5 .note-tree-wrapper::after,
+  .note-level-6 .note-tree-wrapper::after,
+  .note-level-7 .note-tree-wrapper::after,
+  .note-level-8 .note-tree-wrapper::after,
+  .note-level-9 .note-tree-wrapper::after,
+  .note-level-10 .note-tree-wrapper::after {
+    left: -14px;
+    width: 10px;
+    opacity: 0.2;
+  }
+  
+  .note-actions {
+    gap: 4px;
+  }
+  
+  .note-btn {
+    padding: 2px 6px;
+    font-size: 0.55rem;
+  }
+  
+  .note-card {
+    padding: 10px 12px;
+  }
+  
+  .note-content {
+    font-size: 0.85rem;
+  }
+  
+  .thread-content,
+  .note-content {
+    max-width: 100%;
+  }
+}
+
+/* Melhorias para telas muito largas */
+@media (min-width: 1400px) {
+  #notion-editor {
+    max-width: 85ch;
+  }
+  
+  .block-p {
+    font-size: 1.1rem;
+  }
+  
+  .block-quote {
+    font-size: 1.2rem;
+  }
+}
+
+/* Espaçamento vertical consistente */
+.block-p,
+.block-bullet,
+.block-num,
+.block-quote,
+.block-callout,
+.block-code,
+.block-youtube,
+.block-link,
+.block-image {
+  margin-bottom: 1rem;
+}
+
+.block-p:last-child,
+.block-bullet:last-child,
+.block-num:last-child {
+  margin-bottom: 0;
+}
+
+.block-h1 + .block-p,
+.block-h2 + .block-p,
+.block-h3 + .block-p {
+  margin-top: 0.25rem;
+}
+
+.block-h1 + *,
+.block-h2 + *,
+.block-h3 + * {
+  margin-top: 0.5rem;
+}
+
+.note-content strong,
+.block-content strong {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.note-content em,
+.block-content em {
+  font-style: italic;
+  color: var(--sepia);
+}
+
+.block-content a {
+  text-decoration: none;
+  border-bottom: 1px solid rgba(196, 149, 42, 0.3);
+  transition: border-color 0.2s ease;
+}
+
+.block-content a:hover {
+  border-bottom-color: var(--gold);
+}
+</style>
+</head>
+<body>
+<div id="layout">
+
+  <header id="topbar">
+    <button class="topbar-back" onclick="window.location.href='studythread.html'">← Voltar</button>
+    <div class="topbar-title">Study<span>Thread</span> · Aprofundamento</div>
+    <span class="topbar-badge" id="topbar-tipo">—</span>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="exportarMarkdown()">⬇ Exportar MD</button>
+      <button class="btn btn-gold" onclick="salvarManual()">💾 Salvar</button>
+    </div>
+  </header>
+
+  <div id="top-panels">
+    <div id="post-origem-panel">
+      <div id="post-origem">
+        <div class="origem-label">✦ Post de origem</div>
+        <div class="origem-conteudo" id="origem-conteudo">Carregando…</div>
+        <div class="origem-meta">
+          <div class="origem-autor" id="origem-autor"></div>
+          <div class="origem-tags" id="origem-tags"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="thread-panel">
+      <div class="thread-header">✦ Minhas Notas</div>
+      <div class="thread-content" id="sidebar-body">
+        <div class="notes-loading">Carregando anotações…</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="editor-col">
+    <div id="notion-editor"></div>
+  </div>
+</div>
+
+<div id="slash-menu">
+  <div class="slash-item" data-tipo="h1"><span class="slash-icon">H1</span><span class="slash-label">Título grande</span><span class="slash-hint">Título</span></div>
+  <div class="slash-item" data-tipo="h2"><span class="slash-icon">H2</span><span class="slash-label">Título médio</span><span class="slash-hint">Subtítulo</span></div>
+  <div class="slash-item" data-tipo="h3"><span class="slash-icon">H3</span><span class="slash-label">Título pequeno</span><span class="slash-hint">Seção</span></div>
+  <div class="slash-item" data-tipo="bullet"><span class="slash-icon">•</span><span class="slash-label">Lista com marcadores</span></div>
+  <div class="slash-item" data-tipo="num"><span class="slash-icon">1.</span><span class="slash-label">Lista numerada</span></div>
+  <div class="slash-item" data-tipo="quote"><span class="slash-icon">❝</span><span class="slash-label">Citação / destaque</span></div>
+  <div class="slash-item" data-tipo="callout"><span class="slash-icon">💡</span><span class="slash-label">Nota / callout</span></div>
+  <div class="slash-item" data-tipo="code"><span class="slash-icon">{}</span><span class="slash-label">Código</span></div>
+  <div class="slash-item" data-tipo="divider"><span class="slash-icon">—</span><span class="slash-label">Divisor</span></div>
+  <div class="slash-item" data-tipo="youtube"><span class="slash-icon">▶</span><span class="slash-label">Vídeo YouTube</span></div>
+  <div class="slash-item" data-tipo="link"><span class="slash-icon">🔗</span><span class="slash-label">Link externo</span></div>
+</div>
+
+<div id="toolbar">
+  <button class="tb-btn" data-cmd="bold"><b>B</b></button>
+  <button class="tb-btn" data-cmd="italic"><i>I</i></button>
+  <button class="tb-btn" data-cmd="underline"><u>U</u></button>
+  <button class="tb-btn" data-cmd="strikeThrough"><s>S</s></button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" data-converter="h1">H1</button>
+  <button class="tb-btn" data-converter="h2">H2</button>
+  <button class="tb-btn" data-converter="h3">H3</button>
+  <button class="tb-btn" data-converter="quote">❝</button>
+  <button class="tb-btn" data-converter="bullet">•</button>
+  <button class="tb-btn" data-converter="callout">💡</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="btn-excluir-bloco">🗑</button>
+</div>
+
+<div id="status-bar">
+  <div id="status-dot" class="status-dot"></div>
+  <span id="status-txt">Pronto</span>
+  <span id="status-blocos">0 blocos</span>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+// =============================================
+// FIREBASE SETUP
+// =============================================
+firebase.initializeApp({
+  apiKey:"AIzaSyDDGUikGRoJoVu3g0tSenKtZHffflApUWQ",
+  authDomain:"agenda-diaria-6c1ac.firebaseapp.com",
+  projectId:"agenda-diaria-6c1ac",
+  storageBucket:"agenda-diaria-6c1ac.firebasestorage.app",
+  messagingSenderId:"38282868914",
+  appId:"1:38282868914:web:a8332ed3fe258a41af71ab"
+});
+const db = firebase.firestore();
+
+// =============================================
+// GLOBALS
+// =============================================
+let postId = null;
+let postData = null;
+let blocos = [];
+let autoSaveTimer = null;
+let draggingId = null;
+
+let todasNotas = new Map();
+let notasArray = [];
+let byParentMap = new Map();
+let unsubscribeNotes = null;
+let selectedNoteId = null;
+let collapsedNotes = new Set();
+let currentRepliesMap = new Map();
+let notesContainer = null;
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const escHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const tsF = (iso) => { const d = new Date(iso); return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
+
+function toast(msg, tipo = 'info') {
+  let toastContainer = document.getElementById('toast-container-aprofundamento');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container-aprofundamento';
+    toastContainer.style.cssText = `position:fixed;bottom:20px;right:20px;z-index:1000;display:flex;flex-direction:column;gap:8px;`;
+    document.body.appendChild(toastContainer);
+  }
+  const toastEl = document.createElement('div');
+  toastEl.style.cssText = `background:${tipo === 'success' ? 'var(--sage)' : tipo === 'error' ? 'var(--rust)' : 'var(--gold)'};color:var(--ink);padding:8px 16px;border-radius:4px;font-family:var(--font-m);font-size:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.2);transform:translateX(120%);transition:transform 0.3s;`;
+  toastEl.textContent = msg;
+  toastContainer.appendChild(toastEl);
+  setTimeout(() => toastEl.style.transform = 'translateX(0)', 10);
+  setTimeout(() => { toastEl.style.transform = 'translateX(120%)'; setTimeout(() => toastEl.remove(), 300); }, 3000);
+}
+
+function youtubeEmbedUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  
+  const trimmedUrl = url.trim();
+  let id = null;
+  
+  if (trimmedUrl.includes('youtube.com/watch?v=')) {
+    try {
+      const urlObj = new URL(trimmedUrl);
+      id = urlObj.searchParams.get('v');
+    } catch(e) {
+      const match = trimmedUrl.match(/[?&]v=([^&]+)/);
+      if (match) id = match[1];
+    }
+  }
+  else if (trimmedUrl.includes('youtu.be/')) {
+    const parts = trimmedUrl.split('youtu.be/');
+    if (parts[1]) id = parts[1].split('?')[0];
+  }
+  else if (trimmedUrl.includes('youtube.com/embed/')) {
+    const parts = trimmedUrl.split('/embed/');
+    if (parts[1]) id = parts[1].split('?')[0];
+  }
+  
+  if (id && /^[a-zA-Z0-9_-]{11}$/.test(id)) {
+    return `https://www.youtube.com/embed/${id}?rel=0`;
+  }
+  
+  return null;
+}
+
+function detectarTipoNota(texto, permitirEmbedYoutube = true) {
+  if (!texto || texto.trim() === '') {
+    return { tipo: 'texto', embedUrl: null };
+  }
+
+  const ytEmbed = permitirEmbedYoutube ? youtubeEmbedUrl(texto) : null;
+  
+  if (ytEmbed) {
+    return {
+      tipo: 'youtube',
+      embedUrl: ytEmbed
+    };
+  }
+
+  const urlsValidas = texto.match(/https?:\/\/[^\s]+/g) || [];
+  const possuiUrl = urlsValidas.length > 0;
+  
+  const textoSemUrls = texto
+    .replace(/https?:\/\/[^\s]+/g, '')
+    .trim();
+
+  if (possuiUrl && !textoSemUrls) {
+    return {
+      tipo: 'link',
+      embedUrl: null
+    };
+  }
+
+  return {
+    tipo: 'texto',
+    embedUrl: null
+  };
+}
+
+// =============================================
+// HIERARCHICAL NOTES HELPERS
+// =============================================
+function rebuildIndex() {
+  byParentMap.clear();
+  notasArray = Array.from(todasNotas.values());
+  notasArray.forEach(nota => {
+    const parentKey = nota.parentId || 'root';
+    if (!byParentMap.has(parentKey)) byParentMap.set(parentKey, []);
+    byParentMap.get(parentKey).push(nota.id);
+  });
+}
+
+function getChildrenIds(parentId = null) {
+  const key = parentId || 'root';
+  return byParentMap.get(key) || [];
+}
+
+function buildTree(parentId = null, level = 0) {
+  const childrenIds = getChildrenIds(parentId);
+  const sortedChildren = [...childrenIds].sort((a, b) => {
+    const notaA = todasNotas.get(a);
+    const notaB = todasNotas.get(b);
+    if (!notaA || !notaB) return 0;
+    if (parentId === null) return new Date(notaB.criadoEm) - new Date(notaA.criadoEm);
+    return new Date(notaA.criadoEm) - new Date(notaB.criadoEm);
+  });
+  return sortedChildren.map(id => {
+    const nota = todasNotas.get(id);
+    if (!nota) return null;
+    return {
+      ...nota,
+      children: buildTree(id, level + 1)
+    };
+  }).filter(n => n !== null);
+}
+
+function renderizarConteudoNotaStatic(nota) {
+  if (nota.tipo === 'youtube' && nota.embedUrl) {
+    return `<div class="note-embed"><iframe src="${nota.embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" style="width:100%;height:180px;border-radius:6px;"></iframe></div>`;
+  } 
+  else if (nota.tipo === 'link') {
+    const domain = (() => { 
+      try { return new URL(nota.texto).hostname; } 
+      catch { return nota.texto; } 
+    })();
+    return `<a href="${nota.texto}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;color:#c4952a;text-decoration:none;border-bottom:1px dotted rgba(196,149,42,0.3);">🔗 ${domain}</a><div style="font-size:0.75rem;color:#4a4030;margin-top:6px;word-break:break-all;line-height:1.5;">${escHtml(nota.texto)}</div>`;
+  } 
+  else {
+    const textoProcessado = escHtml(nota.texto)
+      .split(/\n\n+/)
+      .map(paragrafo => {
+        if (paragrafo.trim()) {
+          const comLinks = paragrafo.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:#c4952a;text-decoration:none;border-bottom:1px dotted rgba(196,149,42,0.3);">$1</a>');
+          return `<p style="margin-bottom:0.75rem;line-height:1.7;">${comLinks}</p>`;
+        }
+        return '';
+      })
+      .join('');
+    return textoProcessado || `<div>${escHtml(nota.texto)}</div>`;
+  }
+}
+
+function createNoteElement(nota, level = 0) {
+  const hasChildren = nota.children && nota.children.length > 0;
+  const isCollapsed = collapsedNotes.has(nota.id);
+  const isSelected = selectedNoteId === nota.id;
+  const dataCriacao = new Date(nota.criadoEm).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const foiEditado = nota.editadoEm ? ' · editado' : '';
+  
+  const wrapper = document.createElement('div');
+  wrapper.className = `hierarchical-note note-level-${Math.min(level, 10)}`;
+  wrapper.dataset.id = nota.id;
+  wrapper.dataset.level = level;
+  
+  wrapper.innerHTML = `
+    <div class="note-tree-wrapper">
+      <div class="note-card ${isSelected ? 'selected' : ''}" data-id="${nota.id}">
+        <div class="note-content" data-action="select" data-id="${nota.id}">
+          ${renderizarConteudoNotaStatic(nota)}
+        </div>
+        <div class="note-meta">
+          <span class="note-date">📅 ${dataCriacao}${foiEditado}</span>
+          ${hasChildren ? `<button class="note-btn collapse" data-action="toggleCollapse" data-id="${nota.id}">${isCollapsed ? '▶' : '▼'} ${nota.children.length} ${nota.children.length === 1 ? 'resposta' : 'respostas'}</button>` : ''}
+          <div class="note-actions">
+            <button class="note-btn" data-action="edit" data-id="${nota.id}">✏ Editar</button>
+            <button class="note-btn" data-action="reply" data-id="${nota.id}">↩ Responder</button>
+            <button class="note-btn delete" data-action="delete" data-id="${nota.id}">🗑 Excluir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const replyForms = currentRepliesMap.get(nota.id);
+  if (replyForms && replyForms.has('active')) {
+    const formDiv = document.createElement('div');
+    formDiv.className = 'reply-form';
+    formDiv.innerHTML = `
+      <textarea
+        data-reply-text="${nota.id}"
+        placeholder="Escreva sua resposta… Cole um link ou URL do YouTube para embed automático."
+        style="font-family:var(--font-b);font-size:0.85rem;color:#bfb090;background:#1e1810;min-height:70px;">
+      </textarea>
+
+      <textarea
+        data-reply-links="${nota.id}"
+        placeholder="Links rápidos… URLs aqui nunca geram embed."
+        style="margin-top:8px;min-height:46px;font-family:var(--font-m);font-size:0.78rem;color:#c4952a;background:#18140f;border:1px solid #3d3020;border-radius:4px;padding:8px 10px;resize:vertical;outline:none;">
+      </textarea>
+
+      <div class="reply-form-actions">
+        <button class="reply-submit" data-action="submitReply" data-id="${nota.id}">Responder</button>
+        <button class="reply-cancel" data-action="cancelReply" data-id="${nota.id}">Cancelar</button>
+      </div>
+    `;
+    wrapper.querySelector('.note-tree-wrapper').appendChild(formDiv);
+  }
+  
+  if (hasChildren && !isCollapsed) {
+    const repliesRegion = document.createElement('div');
+    repliesRegion.className = 'replies-region expanded';
+    nota.children.forEach(child => { repliesRegion.appendChild(createNoteElement(child, level + 1)); });
+    wrapper.appendChild(repliesRegion);
+  } else if (hasChildren && isCollapsed) {
+    const repliesRegion = document.createElement('div');
+    repliesRegion.className = 'replies-region';
+    wrapper.appendChild(repliesRegion);
+  }
+  
+  return wrapper;
+}
+
+function renderFullTree() {
+  if (!notesContainer) {
+    console.warn("renderFullTree: notesContainer não encontrado");
+    return;
+  }
+  rebuildIndex();
+  const tree = buildTree();
+  notesContainer.innerHTML = '';
+  
+  const composerDiv = document.createElement('div');
+  composerDiv.style.marginBottom = '20px';
+  composerDiv.innerHTML = `
+    <div id="nota-composer">
+      <textarea id="nota-nova-txt" placeholder="Nova nota principal… Escreva um pensamento, cole um link ou URL do YouTube." style="width:100%;min-height:70px;background:#1e1810;border:1px solid #3d3020;border-radius:4px;padding:8px 10px;font-family:var(--font-b);font-size:0.85rem;color:#bfb090;resize:vertical;outline:none;"></textarea>
+      <button id="btn-add-root-note" style="width:100%;margin-top:6px;background:var(--gold);color:var(--ink);border:none;border-radius:var(--r);padding:7px;font-family:var(--font-m);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .15s;">+ Nova Nota Principal</button>
+    </div>
+  `;
+  notesContainer.appendChild(composerDiv);
+  
+  if (tree.length === 0) {
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'notes-empty';
+    emptyDiv.innerHTML = '✦ Nenhuma nota ainda ✦<br><span style="font-size:0.7rem;">Crie sua primeira nota principal acima</span>';
+    notesContainer.appendChild(emptyDiv);
+  } else {
+    const notesDiv = document.createElement('div');
+    notesDiv.className = 'hierarchical-notes';
+    tree.forEach(nota => { notesDiv.appendChild(createNoteElement(nota, 0)); });
+    notesContainer.appendChild(notesDiv);
+  }
+  
+  const addButton = document.getElementById('btn-add-root-note');
+  if (addButton) {
+    const newButton = addButton.cloneNode(true);
+    addButton.parentNode.replaceChild(newButton, addButton);
+    newButton.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      await addRootNote();
+    });
+  }
+  const textarea = document.getElementById('nota-nova-txt');
+  if (textarea) {
+    const newTextarea = textarea.cloneNode(true);
+    textarea.parentNode.replaceChild(newTextarea, textarea);
+    newTextarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        addRootNote();
+      }
+    });
+  }
+}
+
+// CRUD Notes functions
+async function addRootNote() {
+  const textarea = document.getElementById('nota-nova-txt');
+  if (!textarea) return;
+  const texto = textarea.value.trim();
+  if (!texto) return;
+  const { tipo, embedUrl } = detectarTipoNota(texto, true);
+  const now = new Date().toISOString();
+  const novaNota = { postId, parentId: null, texto, tipo, embedUrl, depth: 0, ordem: Date.now(), path: [], criadoEm: now, editadoEm: null, respostaCount: 0 };
+  try {
+    await db.collection('anotacoes').add(novaNota);
+    toast('Nota adicionada!', 'success');
+    textarea.value = '';
+  } catch (e) { toast('Erro ao adicionar nota', 'error'); console.error(e); }
+}
+
+async function addReply(parentId) {
+  const textarea = document.querySelector(`textarea[data-reply-text="${parentId}"]`);
+  const linksTextarea = document.querySelector(`textarea[data-reply-links="${parentId}"]`);
+  
+  const texto = textarea?.value.trim() || '';
+  const linksTexto = linksTextarea?.value.trim() || '';
+  
+  if (!texto && !linksTexto) return;
+  
+  const textoFinal = texto && linksTexto
+    ? texto + '\n\n' + linksTexto
+    : texto || linksTexto;
+  
+  const textoParaDeteccao = texto || linksTexto;
+  const permitirEmbedYoutube = !!texto;
+  
+  const { tipo, embedUrl } = detectarTipoNota(textoParaDeteccao, permitirEmbedYoutube);
+  
+  const parent = todasNotas.get(parentId);
+  const now = new Date().toISOString();
+  const depth = parent ? (parent.depth || 0) + 1 : 0;
+  const path = parent ? [...(parent.path || []), parent.id] : [];
+  
+  const novaNota = { 
+    postId, 
+    parentId, 
+    texto: textoFinal, 
+    tipo, 
+    embedUrl, 
+    depth, 
+    ordem: Date.now(), 
+    path, 
+    criadoEm: now, 
+    editadoEm: null, 
+    respostaCount: 0 
+  };
+  
+  try {
+    await db.collection('anotacoes').add(novaNota);
+    if (parent) await db.collection('anotacoes').doc(parentId).update({ respostaCount: (parent.respostaCount || 0) + 1 });
+    
+    if (textarea) textarea.value = '';
+    if (linksTextarea) linksTextarea.value = '';
+    
+    currentRepliesMap.delete(parentId);
+    toast('Resposta adicionada!', 'success');
+  } catch (e) { 
+    toast('Erro ao adicionar resposta', 'error'); 
+    console.error(e); 
+  }
+}
+
+async function updateNote(noteId, newText) {
+  const { tipo, embedUrl } = detectarTipoNota(newText, true);
+  try {
+    await db.collection('anotacoes').doc(noteId).update({ texto: newText, tipo, embedUrl, editadoEm: new Date().toISOString() });
+    toast('Nota atualizada!', 'success');
+  } catch (e) { toast('Erro ao atualizar nota', 'error'); console.error(e); }
+}
+
+async function deleteNoteRecursive(noteId) {
+  if (!confirm('Excluir nota e todas as respostas?')) return;
+  const toDelete = [noteId];
+  const findChildren = (id) => { getChildrenIds(id).forEach(childId => { toDelete.push(childId); findChildren(childId); }); };
+  findChildren(noteId);
+  const batch = db.batch();
+  toDelete.forEach(id => { batch.delete(db.collection('anotacoes').doc(id)); });
+  try { await batch.commit(); toast('Nota e respostas excluídas!', 'success'); } 
+  catch (e) { toast('Erro ao excluir', 'error'); console.error(e); }
+}
+
+function toggleCollapse(noteId) {
+  collapsedNotes.has(noteId) ? collapsedNotes.delete(noteId) : collapsedNotes.add(noteId);
+  renderFullTree();
+}
+
+function selectNote(noteId) {
+  selectedNoteId = noteId;
+  renderFullTree();
+  setTimeout(() => { const selectedEl = document.querySelector(`.note-card[data-id="${noteId}"]`); if (selectedEl) selectedEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+}
+
+function showReplyForm(noteId) { currentRepliesMap.set(noteId, new Set(['active'])); renderFullTree(); setTimeout(() => { const textarea = document.querySelector(`textarea[data-reply-text="${noteId}"]`); if (textarea) textarea.focus(); }, 100); }
+function cancelReply(noteId) { currentRepliesMap.delete(noteId); renderFullTree(); }
+function showEditForm(noteId) {
+  const nota = todasNotas.get(noteId);
+  if (!nota) return;
+  const noteCard = document.querySelector(`.note-card[data-id="${noteId}"]`);
+  const contentDiv = noteCard.querySelector('.note-content');
+  const editForm = document.createElement('div');
+  editForm.className = 'edit-form';
+  editForm.innerHTML = `<textarea data-edit-text="${noteId}">${escHtml(nota.texto)}</textarea><div class="edit-form-actions"><button class="edit-submit" data-action="saveEdit" data-id="${noteId}">Salvar</button><button class="edit-cancel" data-action="cancelEdit" data-id="${noteId}">Cancelar</button></div>`;
+  contentDiv.style.display = 'none';
+  contentDiv.parentElement?.appendChild(editForm);
+  const textarea = editForm.querySelector('textarea');
+  textarea.focus();
+  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+}
+function cancelEdit(noteId) {
+  const noteCard = document.querySelector(`.note-card[data-id="${noteId}"]`);
+  const editForm = noteCard.querySelector('.edit-form');
+  const contentDiv = noteCard.querySelector('.note-content');
+  if (editForm) editForm.remove();
+  if (contentDiv) contentDiv.style.display = 'block';
+}
+async function saveEdit(noteId) {
+  const textarea = document.querySelector(`textarea[data-edit-text="${noteId}"]`);
+  const newText = textarea?.value.trim();
+  if (!newText) return;
+  await updateNote(noteId, newText);
+  cancelEdit(noteId);
+}
+
+function setupEventDelegation() {
+  if (!notesContainer) return;
+  notesContainer.removeEventListener('click', handleNoteClick);
+  notesContainer.addEventListener('click', handleNoteClick);
+}
+async function handleNoteClick(e) {
+  const target = e.target;
+  const action = target.dataset.action;
+  const id = target.dataset.id;
+  if (action === 'select' && id) selectNote(id);
+  else if (action === 'toggleCollapse' && id) toggleCollapse(id);
+  else if (action === 'reply' && id) showReplyForm(id);
+  else if (action === 'edit' && id) showEditForm(id);
+  else if (action === 'delete' && id) await deleteNoteRecursive(id);
+  else if (action === 'submitReply' && id) await addReply(id);
+  else if (action === 'cancelReply' && id) cancelReply(id);
+  else if (action === 'saveEdit' && id) await saveEdit(id);
+  else if (action === 'cancelEdit' && id) cancelEdit(id);
+}
+
+function setupRealtimeNotes() {
+  if (unsubscribeNotes) unsubscribeNotes();
+  unsubscribeNotes = db.collection('anotacoes').where('postId', '==', postId)
+    .onSnapshot((snapshot) => {
+      let hasChanges = false;
+      snapshot.docChanges().forEach(change => {
+        const data = change.doc.data();
+        const noteId = change.doc.id;
+        if (change.type === 'added') { todasNotas.set(noteId, { id: noteId, ...data }); hasChanges = true; }
+        else if (change.type === 'modified') { todasNotas.set(noteId, { id: noteId, ...data }); hasChanges = true; }
+        else if (change.type === 'removed') { todasNotas.delete(noteId); collapsedNotes.delete(noteId); currentRepliesMap.delete(noteId); if (selectedNoteId === noteId) selectedNoteId = null; hasChanges = true; }
+      });
+      if (hasChanges) renderFullTree();
+    }, (error) => { console.error('Erro no onSnapshot:', error); toast('Erro de conexão em tempo real', 'error'); });
+}
+
+// =============================================
+// POST & EDITOR FUNCTIONS (original)
+// =============================================
+async function carregarPost() {
+  try {
+    const snap = await db.collection('posts').doc(postId).get();
+    if (!snap.exists) return;
+    postData = snap.data();
+    document.getElementById('origem-conteudo').textContent = postData.conteudo;
+    document.getElementById('topbar-tipo').textContent = postData.tipo || 'post';
+    document.getElementById('topbar-tipo').className = `topbar-badge tipo-${postData.tipo}`;
+    const autorEl = document.getElementById('origem-autor');
+    if (postData.autorEmoji || postData.autorNome) {
+      autorEl.innerHTML = `<span class="origem-dot" style="background:${postData.autorCor || '#c4952a'}22;border:1px solid ${postData.autorCor || '#c4952a'}44;">${postData.autorEmoji || '🧑'}</span><span style="color:${postData.autorCor || '#c4952a'}">${postData.autorNome || 'Usuário'}</span><span>· ${tsF(postData.timestamp)}</span>`;
+    }
+    const tagsEl = document.getElementById('origem-tags');
+    tagsEl.innerHTML = '';
+    (postData.tags || []).forEach(t => { const s = document.createElement('span'); s.className = 'origem-tag'; s.textContent = '#' + t; tagsEl.appendChild(s); });
+  } catch (e) { console.error(e); }
+}
+
+async function carregarBlocos() {
+  try {
+    const snap = await db.collection('aprofundamentos').doc(postId).get();
+    if (snap.exists && snap.data().blocos) blocos = snap.data().blocos;
+    else blocos = [{ id: uid(), tipo: 'h1', conteudo: 'Meu Aprofundamento' }, { id: uid(), tipo: 'p', conteudo: '' }];
+  } catch (e) { blocos = [{ id: uid(), tipo: 'h1', conteudo: 'Meu Aprofundamento' }, { id: uid(), tipo: 'p', conteudo: '' }]; }
+}
+
+function coletarBlocos() {
+  const editor = document.getElementById('notion-editor');
+  const resultado = [];
+  editor.querySelectorAll('.notion-block').forEach(blockEl => {
+    const id = blockEl.dataset.id;
+    const tipo = blockEl.dataset.tipo;
+    const bloco = blocos.find(b => b.id === id) || {};
+    if (tipo === 'divider') resultado.push({ id, tipo, conteudo: '' });
+    else if (tipo === 'youtube') resultado.push({ id, tipo, conteudo: bloco.conteudo || '' });
+    else if (tipo === 'link') resultado.push({ id, tipo, conteudo: bloco.conteudo || '' });
+    else { const contentEl = blockEl.querySelector('.block-content'); resultado.push({ id, tipo, conteudo: contentEl ? contentEl.innerHTML : '' }); }
+  });
+  return resultado;
+}
+
+async function salvar(silencioso = false) {
+  setStatus('saving', 'Salvando…');
+  blocos = coletarBlocos();
+  try {
+    await db.collection('aprofundamentos').doc(postId).set({ blocos, atualizadoEm: new Date().toISOString() }, { merge: true });
+    setStatus('ok', silencioso ? 'Salvo automaticamente' : 'Salvo!');
+    atualizarStatusBlocos();
+  } catch (e) { setStatus('ok', 'Erro ao salvar'); console.error(e); }
+}
+function salvarManual() { salvar(false); }
+function agendarAutoSave() { clearTimeout(autoSaveTimer); autoSaveTimer = setTimeout(() => salvar(true), 2500); }
+function setStatus(tipo, msg) { const dot = document.getElementById('status-dot'); const txt = document.getElementById('status-txt'); if (dot) dot.className = 'status-dot' + (tipo === 'saving' ? ' saving' : ''); if (txt) txt.textContent = msg; }
+function atualizarStatusBlocos() { const el = document.getElementById('status-blocos'); if (el) el.textContent = `${blocos.length} bloco${blocos.length !== 1 ? 's' : ''}`; }
+
+function renderEditor() {
+  requestAnimationFrame(() => {
+    const editor = document.getElementById('notion-editor');
+    editor.innerHTML = '';
+    blocos.forEach(b => editor.appendChild(criarBlocoEl(b)));
+    atualizarStatusBlocos();
+  });
+}
+
+function criarBlocoEl(bloco) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'notion-block';
+  wrapper.dataset.id = bloco.id;
+  wrapper.dataset.tipo = bloco.tipo;
+  wrapper.draggable = true;
+  const handle = document.createElement('div');
+  handle.className = 'block-handle';
+  handle.textContent = '⠿';
+  handle.title = 'Arrastar';
+  if (bloco.tipo === 'divider') { wrapper.innerHTML = `<hr class="block-divider" style="flex:1;"/>`; return wrapper; }
+  let inner = '';
+  if (bloco.tipo === 'youtube') inner = renderBlocoYoutube(bloco);
+  else if (bloco.tipo === 'link') inner = renderBlocoLink(bloco);
+  else { const ph = tipoPlaceholder(bloco.tipo); inner = `<div class="block-content ${tipoToClass(bloco.tipo)}" contenteditable="true" data-ph="${ph}">${bloco.conteudo || ''}</div>`; }
+  wrapper.innerHTML = '';
+  wrapper.appendChild(handle);
+  const innerDiv = document.createElement('div'); innerDiv.style.flex = '1'; innerDiv.style.minWidth = '0'; innerDiv.innerHTML = inner;
+  wrapper.appendChild(innerDiv);
+  if (bloco.tipo !== 'youtube' && bloco.tipo !== 'link') {
+    const ce = wrapper.querySelector('.block-content');
+    if (ce) { ce.addEventListener('keydown', e => onKeyDown(e, wrapper)); ce.addEventListener('input', () => { agendarAutoSave(); mostrarToolbarSeSelecionado(); }); ce.addEventListener('mouseup', mostrarToolbarSeSelecionado); ce.addEventListener('keyup', mostrarToolbarSeSelecionado); adicionarInputListener(wrapper, bloco.id); ce.addEventListener('click', e => { const link = e.target.closest('a'); if (link) { e.preventDefault(); window.open(link.href, '_blank', 'noopener'); } }); }
+  }
+  wrapper.addEventListener('dragstart', e => { draggingId = bloco.id; wrapper.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+  wrapper.addEventListener('dragend', () => { wrapper.classList.remove('dragging'); document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); });
+  wrapper.addEventListener('dragover', e => { e.preventDefault(); wrapper.classList.add('drag-over'); });
+  wrapper.addEventListener('dragleave', () => wrapper.classList.remove('drag-over'));
+  wrapper.addEventListener('drop', e => { e.preventDefault(); wrapper.classList.remove('drag-over'); moverBloco(draggingId, bloco.id); });
+  return wrapper;
+}
+
+function moverBloco(fromId, toId) {
+  if (fromId === toId) return;
+  const fromIdx = blocos.findIndex(b => b.id === fromId);
+  const toIdx = blocos.findIndex(b => b.id === toId);
+  if (fromIdx < 0 || toIdx < 0) return;
+  const [item] = blocos.splice(fromIdx, 1);
+  blocos.splice(toIdx, 0, item);
+  renderEditor();
+  agendarAutoSave();
+}
+function renderBlocoYoutube(bloco) { if (bloco.conteudo) { const embedUrl = youtubeEmbedUrl(bloco.conteudo) || bloco.conteudo; return `<div class="block-youtube"><div class="youtube-label">▶ Vídeo YouTube <button onclick="removerYoutube('${bloco.id}')" style="background:transparent;border:none;color:var(--ghost);cursor:pointer;font-size:.7rem;margin-left:8px;">✕ Remover</button></div><div class="youtube-embed"><iframe src="${embedUrl}" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div></div>`; } return `<div class="block-youtube"><div class="youtube-label">▶ Embed YouTube</div><div class="youtube-input-wrap"><input type="text" placeholder="Cole o link do YouTube (youtu.be/… ou youtube.com/watch?v=…)" onkeydown="if(event.key==='Enter'){embedYoutube('${bloco.id}',this.value);}" /><button class="btn btn-gold" style="font-size:.65rem;padding:6px 10px;" onclick="embedYoutube('${bloco.id}',this.previousElementSibling.value)">Embed</button></div></div>`; }
+function renderBlocoLink(bloco) { if (bloco.conteudo) { const url = bloco.conteudo; const domain = (() => { try { return new URL(url).hostname; } catch { return url; } })(); return `<a class="block-link" href="${url}" target="_blank" rel="noopener"><span class="link-icon">🔗</span><div class="link-info"><div class="link-title">${domain}</div><div class="link-url">${url}</div></div><button onclick="event.preventDefault();removerLink('${bloco.id}')" style="background:transparent;border:none;color:var(--ghost);cursor:pointer;font-size:.75rem;padding:4px;">✕</button></a>`; } return `<div class="block-youtube"><div class="youtube-label">🔗 Link externo</div><div class="link-block-input"><input type="text" placeholder="Cole a URL aqui…" onkeydown="if(event.key==='Enter'){embedLink('${bloco.id}',this.value);}" /><button class="btn btn-gold" style="font-size:.65rem;padding:6px 10px;" onclick="embedLink('${bloco.id}',this.previousElementSibling.value)">Adicionar</button></div></div>`; }
+function tipoToClass(tipo) { return `block-${tipo}`; }
+function tipoPlaceholder(tipo) { const m = { h1: 'Título', h2: 'Subtítulo', h3: 'Seção', p: "Escreva algo, ou pressione '/' para inserir um bloco…", bullet: 'Item da lista', num: 'Item numerado', quote: 'Citação ou destaque…', callout: '💡 Nota importante…', code: '// Código…' }; return m[tipo] || ''; }
+function embedYoutube(blocoId, url) { const trimmed = (url || '').trim(); let id = null; if (trimmed.includes('youtube.com/watch?v=')) { try { id = new URLSearchParams(trimmed.split('?')[1]).get('v'); } catch { } } else if (trimmed.includes('youtu.be/')) id = trimmed.split('youtu.be/')[1]?.split('?')[0]; else if (trimmed.includes('youtube.com/embed/')) id = trimmed.split('/embed/')[1]?.split('?')[0]; if (!id) { alert('Link do YouTube inválido.'); return; } const b = blocos.find(x => x.id === blocoId); if (b) { b.conteudo = trimmed; renderEditor(); agendarAutoSave(); } }
+function removerYoutube(blocoId) { const b = blocos.find(x => x.id === blocoId); if (b) { b.conteudo = ''; renderEditor(); agendarAutoSave(); } }
+function embedLink(blocoId, url) { const b = blocos.find(x => x.id === blocoId); if (b) { b.conteudo = (url || '').trim(); renderEditor(); agendarAutoSave(); } }
+function removerLink(blocoId) { const b = blocos.find(x => x.id === blocoId); if (b) { b.conteudo = ''; renderEditor(); agendarAutoSave(); } }
+function onKeyDown(e, blockEl) { const blocoId = blockEl.dataset.id; const ce = blockEl.querySelector('.block-content'); if (e.key === '/' && ce.textContent.trim() === '') { e.preventDefault(); abrirSlashMenu(blockEl, blocoId); return; } fecharSlashMenu(); if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); const novoBloco = { id: uid(), tipo: 'p', conteudo: '' }; const idx = blocos.findIndex(b => b.id === blocoId); blocos = coletarBlocos(); blocos.splice(idx + 1, 0, novoBloco); renderEditor(); focarBloco(novoBloco.id); agendarAutoSave(); return; } if (e.key === 'Backspace' && ce.textContent === '' && blocos.length > 1) { e.preventDefault(); const idx = blocos.findIndex(b => b.id === blocoId); blocos = coletarBlocos(); blocos.splice(idx, 1); renderEditor(); focarBloco(blocos[Math.max(0, idx - 1)]?.id); agendarAutoSave(); return; } }
+function adicionarInputListener(blockEl, blocoId) { const ce = blockEl.querySelector('.block-content'); if (!ce) return; let timeoutId = null; ce.addEventListener('input', () => { if (timeoutId) clearTimeout(timeoutId); timeoutId = setTimeout(() => agendarAutoSave(), 500); }); }
+function focarBloco(id) { if (!id) return; const el = document.querySelector(`[data-id="${id}"] .block-content`); if (el) { el.focus(); const range = document.createRange(); const sel = window.getSelection(); range.selectNodeContents(el); range.collapse(false); sel.removeAllRanges(); sel.addRange(range); } }
+let slashBlocoId = null;
+function abrirSlashMenu(blockEl, blocoId) { slashBlocoId = blocoId; const rect = blockEl.getBoundingClientRect(); const menu = document.getElementById('slash-menu'); menu.style.top = (rect.bottom + 4) + 'px'; menu.style.left = rect.left + 'px'; menu.classList.add('open'); }
+function fecharSlashMenu() { document.getElementById('slash-menu').classList.remove('open'); slashBlocoId = null; }
+function inserirBloco(tipo) { fecharSlashMenu(); const novoBloco = { id: uid(), tipo, conteudo: '' }; if (slashBlocoId === null) { blocos = coletarBlocos(); blocos.push(novoBloco); } else { const idx = blocos.findIndex(b => b.id === slashBlocoId); blocos = coletarBlocos(); if (idx >= 0 && blocos[idx]?.conteudo?.replace(/<[^>]+>/g, '').trim() === '') { blocos.splice(idx, 1, novoBloco); } else { blocos.splice(idx + 1, 0, novoBloco); } } renderEditor(); if (tipo !== 'divider' && tipo !== 'youtube' && tipo !== 'link') focarBloco(novoBloco.id); agendarAutoSave(); }
+document.addEventListener('click', e => { if (!e.target.closest('#slash-menu') && !e.target.closest('.block-content')) fecharSlashMenu(); });
+function mostrarToolbarSeSelecionado() { const sel = window.getSelection(); if (!sel || sel.isCollapsed || sel.toString().trim() === '') { document.getElementById('toolbar').classList.remove('visible'); return; } const range = sel.getRangeAt(0); const rect = range.getBoundingClientRect(); const tb = document.getElementById('toolbar'); tb.style.top = (rect.top - 48 + window.scrollY) + 'px'; tb.style.left = (rect.left + rect.width / 2 - 130) + 'px'; tb.classList.add('visible'); }
+document.addEventListener('mousedown', e => { if (!e.target.closest('#toolbar')) document.getElementById('toolbar').classList.remove('visible'); });
+function fmt(cmd) { document.execCommand(cmd, false, null); }
+function converterBloco(novoTipo) { const sel = window.getSelection(); if (!sel) return; const anchorNode = sel.anchorNode; const blockEl = anchorNode?.closest?.('.notion-block') || anchorNode?.parentElement?.closest?.('.notion-block'); if (!blockEl) return; const id = blockEl.dataset.id; blocos = coletarBlocos(); const b = blocos.find(x => x.id === id); if (b) { b.tipo = novoTipo; renderEditor(); focarBloco(id); agendarAutoSave(); } document.getElementById('toolbar').classList.remove('visible'); }
+function excluirBlocoSelecionado() { const sel = window.getSelection(); const anchorNode = sel?.anchorNode; const blockEl = anchorNode?.closest?.('.notion-block') || anchorNode?.parentElement?.closest?.('.notion-block'); if (!blockEl || blocos.length <= 1) return; const id = blockEl.dataset.id; blocos = coletarBlocos(); const idx = blocos.findIndex(b => b.id === id); blocos.splice(idx, 1); renderEditor(); focarBloco(blocos[Math.max(0, idx - 1)]?.id); agendarAutoSave(); document.getElementById('toolbar').classList.remove('visible'); }
+function exportarMarkdown() { blocos = coletarBlocos(); const lines = []; if (postData) lines.push(`> **Post original:** ${postData.conteudo}\n`); lines.push('---\n'); blocos.forEach(b => { const txt = b.conteudo.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim(); switch (b.tipo) { case 'h1': lines.push(`# ${txt}`); break; case 'h2': lines.push(`## ${txt}`); break; case 'h3': lines.push(`### ${txt}`); break; case 'bullet': lines.push(`- ${txt}`); break; case 'num': lines.push(`1. ${txt}`); break; case 'quote': lines.push(`> ${txt}`); break; case 'callout': lines.push(`> 💡 ${txt}`); break; case 'code': lines.push('```\n' + txt + '\n```'); break; case 'divider': lines.push('---'); break; case 'youtube': lines.push(`[▶ Vídeo YouTube](${b.conteudo})`); break; case 'link': lines.push(`[🔗 Link](${b.conteudo})`); break; default: if (txt) lines.push(txt); } lines.push(''); }); const md = lines.join('\n'); const blob = new Blob([md], { type: 'text/markdown' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `aprofundamento-${postId}.md`; a.click(); }
+
+// =============================================
+// INITIALIZATION
+// =============================================
+window.addEventListener('DOMContentLoaded', async () => {
+  postId = localStorage.getItem('st-aprofundamento-postId');
+  if (!postId) { document.getElementById('origem-conteudo').textContent = 'Post não encontrado.'; return; }
+  notesContainer = document.getElementById('sidebar-body');
+  await carregarPost();
+  await carregarBlocos();
+  renderEditor();
+  setupRealtimeNotes();
+  setupEventDelegation();
+  renderFullTree();
+  document.querySelectorAll('.tb-btn[data-cmd]').forEach(btn => btn.addEventListener('click', () => fmt(btn.dataset.cmd)));
+  document.querySelectorAll('.tb-btn[data-converter]').forEach(btn => btn.addEventListener('click', () => converterBloco(btn.dataset.converter)));
+  document.getElementById('btn-excluir-bloco')?.addEventListener('click', excluirBlocoSelecionado);
+  document.querySelectorAll('.slash-item[data-tipo]').forEach(item => item.addEventListener('click', () => inserirBloco(item.dataset.tipo)));
+});
+</script>
+</body>
+</html>
